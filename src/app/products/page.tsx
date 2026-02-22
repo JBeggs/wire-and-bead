@@ -62,7 +62,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   if (params.sort) searchParamsForNav.sort = params.sort
 
   return (
-    <div className="min-h-screen bg-vintage-background">
+    <div className="min-h-screen bg-vintage-background" data-cy="products-section">
       {/* Admin Management Actions */}
       <AdminActions />
 
@@ -176,7 +176,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <div className="container-wide">
           {products.length > 0 ? (
             <>
-              <div className="product-grid">
+              <div className="product-grid" data-cy="products-grid">
                 {products.map((product: Product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -190,7 +190,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               />
             </>
           ) : (
-            <div className="text-center py-16">
+            <div className="text-center py-16" data-cy="products-empty">
               <Search className="w-16 h-16 mx-auto mb-4 text-text-muted opacity-30" />
               <h2 className="text-xl font-semibold text-text mb-2">No products found</h2>
               <p className="text-text-muted mb-6">

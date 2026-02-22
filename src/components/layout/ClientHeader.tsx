@@ -25,6 +25,7 @@ export default function ClientHeader() {
       {user && (
         <Link
           href="/cart"
+          data-cy="header-cart"
           className="p-2 text-text hover:text-vintage-primary transition-colors relative group"
           aria-label="Shopping cart"
         >
@@ -38,7 +39,7 @@ export default function ClientHeader() {
       )}
 
           {user ? (
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3" data-cy="header-user">
           {isAdmin && (
             <Link
               href="/admin/orders"

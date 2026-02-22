@@ -196,7 +196,11 @@ export default function TestingPage() {
               </p>
               <p className="text-text">
                 <span className="text-text-light">$</span> npm run test:e2e
-                <span className="text-text-light ml-2">— Cypress E2E</span>
+                <span className="text-text-light ml-2">— Run Cypress E2E (headless)</span>
+              </p>
+              <p className="text-text">
+                <span className="text-text-light">$</span> npm run test:e2e:open
+                <span className="text-text-light ml-2">— Open Cypress UI for interactive E2E testing</span>
               </p>
             </div>
           </section>

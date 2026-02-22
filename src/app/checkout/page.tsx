@@ -205,7 +205,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-vintage-background py-12">
+    <div className="min-h-screen bg-vintage-background py-12" data-cy="checkout-content">
       <div className="container-wide">
         {/* Back Link */}
         <Link href="/cart" className="flex items-center text-text-muted hover:text-vintage-primary transition-colors mb-8">
@@ -215,7 +215,7 @@ export default function CheckoutPage() {
 
         <h1 className="text-3xl font-bold font-playfair text-text mb-8">Checkout</h1>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} data-cy="checkout-form">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Checkout Form */}
             <div className="lg:col-span-2 space-y-6">
@@ -481,6 +481,7 @@ export default function CheckoutPage() {
                 {/* Payment Button */}
                 <button
                   type="submit"
+                  data-cy="checkout-submit"
                   disabled={processing}
                   className="btn btn-primary w-full mt-6 py-3"
                 >

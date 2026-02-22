@@ -92,12 +92,12 @@ export default function CartPage() {
   const items = cart?.items || []
 
   return (
-    <div className="min-h-screen bg-vintage-background py-12">
+    <div className="min-h-screen bg-vintage-background py-12" data-cy="cart-container">
       <div className="container-wide">
         <h1 className="text-3xl font-bold font-playfair text-text mb-8">Shopping Cart</h1>
 
         {items.length === 0 ? (
-          <div className="card p-12 text-center">
+          <div className="card p-12 text-center" data-cy="cart-empty">
             <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-text-muted opacity-30" />
             <h2 className="text-xl font-semibold text-text mb-2">Your cart is empty</h2>
             <p className="text-text-muted mb-6">Start shopping to add items to your cart</p>
@@ -106,11 +106,11 @@ export default function CartPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8" data-cy="cart-content">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {items.map((item: CartItem) => (
-                <div key={item.id} className="card p-4 flex gap-4">
+                <div key={item.id} className="card p-4 flex gap-4" data-cy="cart-item">
                   {/* Product Image */}
                   <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                     {(item as any).product_image ? (
@@ -217,7 +217,7 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <Link href="/checkout" className="btn btn-primary w-full mt-6 py-3">
+                <Link href="/checkout" className="btn btn-primary w-full mt-6 py-3" data-cy="checkout-link">
                   Proceed to Checkout
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>

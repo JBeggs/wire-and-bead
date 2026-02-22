@@ -11,6 +11,8 @@
     "test:watch": "NODE_ENV=development vitest",
     "test:coverage": "NODE_ENV=development vitest run --coverage",
     "test:coverage:public": "NODE_ENV=development vitest run --coverage && node scripts/copy-coverage.js",
+    "test:e2e": "node scripts/check-e2e-backend.js && cypress run",
+    "test:e2e:open": "cypress open",
     "git:merge-main": "node scripts/merge_to_main.js",
     "git:commit-push": "node scripts/commit_push.js",
     "git:new-branch": "node scripts/new_branch.js"
@@ -41,6 +43,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.21",
+    "cypress": "^13.17.0",
     "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "^16.0.7",

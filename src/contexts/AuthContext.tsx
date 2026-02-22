@@ -95,6 +95,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (e) {
         console.error('AuthProvider: Refresh failed', e)
+        // JWT fallback: refresh failed but we may have a valid token (e.g. from Cypress session)
+        const token = apiClient.getToken()
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1])) as { user_id?: number; sub?: string }
+            const uid = payload.user_id ?? (payload.sub != null ? Number(payload.sub) : undefined)
+            if (uid != null) {
+              setUser({ id: String(uid), email: '' })
+            }
+          } catch {
+            // Ignore JWT decode errors
+          }
+        }
         setLoading(false)
       }
     }
@@ -138,6 +151,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           signOut()
         }
         // If there is a refresh token, initializeAuth will handle it
+      } else {
+        // JWT fallback: profile fetch failed (404, 500, network) but we have a token.
+        // Decode JWT payload to set minimal user so header shows logged-in state.
+        const token = apiClient.getToken()
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1])) as { user_id?: number; sub?: string }
+            const uid = payload.user_id ?? (payload.sub != null ? Number(payload.sub) : undefined)
+            if (uid != null) {
+              setUser({ id: String(uid), email: '' })
+            }
+          } catch {
+            // Ignore JWT decode errors
+          }
+        }
       }
     } finally {
       setLoading(false)

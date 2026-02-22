@@ -60,6 +60,7 @@ export default function LoginPage() {
                 </div>
                 <input
                   id="username"
+                  data-cy="login-username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -85,6 +86,7 @@ export default function LoginPage() {
                 </div>
                 <input
                   id="password"
+                  data-cy="login-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -109,6 +111,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
+              data-cy="login-submit"
               disabled={isLoading}
               className="btn btn-primary w-full py-4 text-base font-bold shadow-lg shadow-vintage-primary/20 hover:shadow-vintage-primary/30 active:scale-[0.98] transition-all disabled:opacity-70 disabled:scale-100"
             >

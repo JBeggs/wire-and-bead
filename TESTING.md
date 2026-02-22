@@ -57,12 +57,42 @@ npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
 
 ### Recommended Tool
 
-**Cypress**. See [docs/CYPRESS_GUIDE.md](../docs/CYPRESS_GUIDE.md) for setup and best practices.
+**Cypress**. Use `baseUrl: 'http://localhost:3001'` in `cypress.config.js`.
 
 ### Prerequisites
 
 - Django running at `http://localhost:8000`
 - Past and Present company with products
+- **`.env.local`** with `NEXT_PUBLIC_API_URL=http://localhost:8000/api` (required; Next.js reads this at build time, so the dev server must be started with it for E2E)
+
+### Seed Django Test Data
+
+From the `django-crm` directory:
+
+```bash
+cd django-crm
+python manage.py seed_past_and_present_e2e
+```
+
+This creates the Past and Present company (slug: `past-and-present`), test user (`testuser`/`testpass`), and sample products.
+
+### Run E2E Tests
+
+1. Ensure `.env.local` has `NEXT_PUBLIC_API_URL=http://localhost:8000/api` (see Quick Start)
+2. Start Django: `python manage.py runserver 8000`
+3. Start Next.js: `cd past-and-present && npm run dev` (port 3001)
+4. Run Cypress:
+
+```bash
+cd past-and-present
+npm run test:e2e        # Headless run (CI-friendly)
+npm run test:e2e:open   # Open Cypress UI for interactive debugging
+```
+
+### E2E Environment Variables
+
+- `CYPRESS_TEST_USER` (default: testuser)
+- `CYPRESS_TEST_PASSWORD` (default: testpass)
 
 ### Critical Flows to Test
 
@@ -72,9 +102,32 @@ npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
 - Profile (orders, business profile, site settings)
 - Contact page (data from API)
 
-### Cypress Config
+### data-cy Attributes
 
-Use `baseUrl: 'http://localhost:3001'` in `cypress.config.js`.
+| Attribute | Location |
+|-----------|----------|
+| `login-username` | Login form username input |
+| `login-password` | Login form password input |
+| `login-submit` | Login submit button |
+| `register-full-name` | Register form full name |
+| `register-email` | Register form email |
+| `register-password` | Register form password |
+| `register-password-confirm` | Register form confirm password |
+| `register-submit` | Register submit button |
+| `header-user` | Header when logged in |
+| `product-card` | Product card (each product) |
+| `products-section` | Products page section |
+| `products-grid` | Product grid |
+| `products-empty` | Empty products state |
+| `add-to-cart` | Add to cart button |
+| `cart-container` | Cart page container |
+| `cart-empty` | Empty cart state |
+| `cart-content` | Cart with items |
+| `cart-item` | Cart item row |
+| `checkout-link` | Proceed to checkout link |
+| `checkout-content` | Checkout page content |
+| `checkout-form` | Checkout form |
+| `checkout-submit` | Checkout submit button |
 
 ---
 

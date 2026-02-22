@@ -73,6 +73,7 @@ export default function RegisterPage() {
                 </div>
                 <input
                   id="fullName"
+                  data-cy="register-full-name"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -93,6 +94,7 @@ export default function RegisterPage() {
                 </div>
                 <input
                   id="email"
+                  data-cy="register-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -113,6 +115,7 @@ export default function RegisterPage() {
                 </div>
                 <input
                   id="password"
+                  data-cy="register-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -138,6 +141,7 @@ export default function RegisterPage() {
                 </div>
                 <input
                   id="confirmPassword"
+                  data-cy="register-password-confirm"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -151,6 +155,7 @@ export default function RegisterPage() {
             <div className="pt-2">
               <button
                 type="submit"
+                data-cy="register-submit"
                 disabled={isLoading}
                 className="btn btn-primary w-full py-4 text-base font-bold shadow-lg shadow-vintage-primary/20 hover:shadow-vintage-primary/30 active:scale-[0.98] transition-all disabled:opacity-70 disabled:scale-100"
               >

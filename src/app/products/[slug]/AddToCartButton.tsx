@@ -86,6 +86,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
       <div className="space-y-2">
         <button
           onClick={handleAddToCart}
+          data-cy="add-to-cart"
           disabled={loading || isOutOfStock || !user}
           className={`w-full py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-2 transition-colors ${
             !user
