@@ -236,12 +236,12 @@ export default function CustomerOrderDetailPage() {
                 {[addr.address, addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ')}
               </p>
             )}
-            {order.pudo_pickup_point && typeof order.pudo_pickup_point === 'object' && (order.pudo_pickup_point as Record<string, unknown>).address && (
+            {order.pudo_pickup_point && typeof order.pudo_pickup_point === 'object' && (order.pudo_pickup_point as Record<string, unknown>).address ? (
               <p className="text-sm text-text-muted mt-2">
                 <span className="font-medium text-text">Pudo:</span>{' '}
-                {(order.pudo_pickup_point as Record<string, unknown>).address}
+                {String((order.pudo_pickup_point as Record<string, unknown>).address)}
               </p>
-            )}
+            ) : null}
           </div>
         </div>
 
