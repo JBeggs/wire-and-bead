@@ -180,6 +180,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           {minQty > 1 && (
             <p className="mt-1 text-sm text-text-muted">Min: {minQty}</p>
           )}
+          {product.track_inventory && (
+            <>
+              {product.quantity === 0 && (
+                <p className="mt-2 text-sm font-medium text-red-600">Out of stock</p>
+              )}
+              {product.quantity > 0 && product.quantity <= 5 && (
+                <p className="mt-2 text-sm font-medium text-amber-700">Only {product.quantity} left!</p>
+              )}
+            </>
+          )}
           <div className="mt-auto pt-3 flex items-center gap-2">
             <span className={`price ${isVintage ? '' : 'text-modern-primary'}`}>
               R{Number(product.price).toFixed(2)}

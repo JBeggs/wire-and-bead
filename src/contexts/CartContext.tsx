@@ -333,10 +333,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
+const CART_DEFAULT: CartContextType = {
+  cart: null,
+  itemCount: 0,
+  loading: false,
+  refreshCart: async () => {},
+  addItemToCart: async () => {},
+  updateItemQuantity: async () => {},
+  removeItemFromCart: async () => {},
+  clearCart: async () => {},
+  syncCartAfterLogin: async () => {},
+}
+
 export function useCart() {
   const context = useContext(CartContext)
   if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider')
   }
   return context
+}
+
+/** Safe version that returns defaults when outside CartProvider. Use when component may render outside provider (e.g. Header). */
+export function useCartSafe(): CartContextType {
+  const context = useContext(CartContext)
+  return context ?? CART_DEFAULT
 }

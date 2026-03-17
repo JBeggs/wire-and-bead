@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ShoppingCart, User, LogOut, Package } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useCart } from '@/contexts/CartContext'
+import { useCartSafe } from '@/contexts/CartContext'
 import { useMounted } from '@/hooks/useMounted'
 
 export default function ClientHeader() {
@@ -21,12 +21,7 @@ export default function ClientHeader() {
     // Render safe fallback when header mounts outside providers.
   }
   const isAdmin = profile?.role === 'admin' || profile?.role === 'business_owner'
-  let itemCount = 0
-  try {
-    itemCount = useCart().itemCount
-  } catch {
-    itemCount = 0
-  }
+  const { itemCount } = useCartSafe()
   const mounted = useMounted()
 
   if (!mounted || authLoading) {
