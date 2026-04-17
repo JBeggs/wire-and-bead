@@ -15,7 +15,10 @@ import HomeProductQuickModal from '@/components/home/HomeProductQuickModal'
 
 interface ProductCardProps {
   product: Product
-  /** Home grid: hover lift, no tile-wide link; Details opens quick-view modal with cart. */
+  /**
+   * When true: extra card hover lift (home rails), optional quick-view modal via Details button.
+   * Image and title always link to the product page — never removed.
+   */
   homeQuickView?: boolean
 }
 
@@ -122,13 +125,9 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
         }`}
       >
         <div className="relative overflow-hidden aspect-square">
-          {homeQuickView ? (
-            <div className="absolute inset-0 z-0 cursor-default select-none">{imageArea}</div>
-          ) : (
-            <Link href={`/products/${product.slug}`} className="absolute inset-0 z-0" prefetch={false}>
-              {imageArea}
-            </Link>
-          )}
+          <Link href={`/products/${product.slug}`} className="absolute inset-0 z-0 block" prefetch={false}>
+            {imageArea}
+          </Link>
           
           <div className="absolute top-2 left-2 z-10 pointer-events-none flex flex-col gap-2">
             <span className={`tag ${isVintage ? 'tag-vintage' : 'tag-new'}`}>
@@ -179,21 +178,17 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
         </div>
         
         <div className="p-4 flex-1 flex flex-col">
-          {homeQuickView ? (
+          <Link href={`/products/${product.slug}`} className="group/title" prefetch={false}>
             <h3
               className={`font-semibold text-text line-clamp-1 transition-colors ${
-                isVintage ? 'group-hover:text-vintage-primary' : 'group-hover:text-modern-primary'
+                isVintage
+                  ? 'group-hover/title:text-vintage-primary group-hover:text-vintage-primary'
+                  : 'group-hover/title:text-modern-primary group-hover:text-modern-primary'
               }`}
             >
               {product.name}
             </h3>
-          ) : (
-            <Link href={`/products/${product.slug}`} className="group/title" prefetch={false}>
-              <h3 className={`font-semibold text-text group-hover/title:${isVintage ? 'text-vintage-primary' : 'text-modern-primary'} transition-colors line-clamp-1`}>
-                {product.name}
-              </h3>
-            </Link>
-          )}
+          </Link>
           {product.description && (
             <p className="text-sm text-text-muted mt-1 line-clamp-2 min-h-[40px]">{product.description}</p>
           )}
