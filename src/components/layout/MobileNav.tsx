@@ -14,7 +14,7 @@ interface MobileNavProps {
 
 type TruckCoords = { startX: number; startY: number; endX: number; endY: number }
 
-export function MobileNav({ menuItems, logoUrl = '/logo.png' }: MobileNavProps) {
+export function MobileNav({ menuItems, logoUrl: _logoUrl = '/logo.png' }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [countBump, setCountBump] = useState(false)
   const [showTruck, setShowTruck] = useState(false)

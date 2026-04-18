@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Product } from '@/lib/types'
 
 interface WhatsAppShareButtonProps {
@@ -12,10 +11,9 @@ export default function WhatsAppShareButton({
   product,
   companyName = 'Past and Present',
 }: WhatsAppShareButtonProps) {
-  const [href, setHref] = useState('#')
-
-  useEffect(() => {
-    const url = window.location.href
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    const url = typeof window !== 'undefined' ? window.location.href : ''
     const desc = (product.short_description || product.description || '')
       .replace(/\s+/g, ' ')
       .trim()
@@ -27,14 +25,17 @@ export default function WhatsAppShareButton({
     ]
       .filter(Boolean)
       .join('\n\n')
-    setHref(`https://wa.me/?text=${encodeURIComponent(msg)}`)
-  }, [product, companyName])
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(msg)}`,
+      '_blank',
+      'noopener,noreferrer',
+    )
+  }
 
   return (
     <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      href="#"
+      onClick={handleClick}
       aria-label="Share on WhatsApp"
       className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-base font-medium text-white transition-colors hover:bg-[#20bd5a] active:scale-95 md:hidden"
     >

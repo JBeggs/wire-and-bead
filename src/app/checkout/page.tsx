@@ -51,7 +51,7 @@ export default function CheckoutPage() {
     pudo: 40,
   })
   const { user, profile, loading: authLoading } = useAuth()
-  const { showError, showSuccess } = useToast()
+  const { showError } = useToast()
   const router = useRouter()
 
   const [formData, setFormData] = useState({
@@ -69,10 +69,6 @@ export default function CheckoutPage() {
     customer_notes: '',
   })
 
-  const allFeatured = useMemo(
-    () => (cart?.items || []).every((item: any) => item.featured === true),
-    [cart?.items]
-  )
   const showDeliveryMethods = addressChecked
   const breakdown: SupplierDeliveryBreakdownItem[] = cart?.supplier_delivery_breakdown || []
   const belowThresholdGroups = breakdown.filter((b) => (b.amount_to_free_delivery || 0) > 0)

@@ -2,7 +2,7 @@
  * Cart utils unit tests - cost-based delivery threshold
  */
 import { describe, it, expect } from 'vitest'
-import { groupCartItems, getCartExtraDelivery, OTHER_GROUP } from './cart-utils'
+import { groupCartItems, getCartExtraDelivery } from './cart-utils'
 import type { CartItem } from './types'
 
 function makeItem(overrides: Partial<CartItem> & { price: number; quantity: number }): CartItem {

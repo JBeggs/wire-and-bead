@@ -419,7 +419,6 @@ export default function CartPage() {
                     const countdown = formatCartCountdown(item)
                     const isTimed = Boolean(item.timed_expires_at)
                     const isBundle = isBundleProduct(item)
-                    const images = getCartItemImages(item)
                     const itemDeliveryNote = deliveryCost > 0
                       ? (primaryDeliveryEntry?.weight_based && primaryDeliveryEntry?.total_weight_kg != null
                         ? `Delivery: R${deliveryCost.toFixed(2)} (weight-based, ${Number(primaryDeliveryEntry.total_weight_kg).toFixed(1)} kg)`
