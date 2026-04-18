@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { serverEcommerceApi } from '@/lib/api-server'
 export const dynamic = 'force-dynamic'
 import { Product } from '@/lib/types'
-import { buildProductOgImage, buildProductSeo } from '@/lib/product-seo'
+import { buildProductOgImage, buildProductSeo, publicSiteOrigin } from '@/lib/product-seo'
 import { ArrowLeft, Shield, Info, Phone, FileText, Package, TimerReset, Truck } from 'lucide-react'
 import AddToCartButton from './AddToCartButton'
 import ProductGallery from './ProductGallery'
@@ -58,6 +58,8 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
   const { title, description, keywords } = buildProductSeo(product, COMPANY_NAME)
   const ogImage = buildProductOgImage(product)
+  const site = publicSiteOrigin()
+  const ogUrl = site ? `${site}/products/${slug}` : undefined
 
   return {
     title,
@@ -67,6 +69,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       title,
       description,
       type: 'website',
+      ...(ogUrl ? { url: ogUrl } : {}),
       images: [{ url: ogImage, width: 1200, height: 630, alt: product.name }],
     },
     twitter: {

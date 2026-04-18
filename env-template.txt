@@ -5,6 +5,10 @@
 NEXT_PUBLIC_API_URL=https://3pillars.pythonanywhere.com/api
 NEXT_PUBLIC_COMPANY_SLUG=past-and-present
 
+# Canonical site URL (no trailing slash). Required for correct Open Graph / WhatsApp link previews
+# (absolute og:image URLs). On Vercel this is optional if you rely on VERCEL_URL.
+# NEXT_PUBLIC_SITE_URL=https://www.your-domain.com
+
 # Optional: Override for local development
 # NEXT_PUBLIC_API_URL=http://localhost:8000/api
 

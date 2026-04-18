@@ -12,6 +12,27 @@ import { Footer } from '@/components/layout/Footer'
 // Force dynamic rendering since we use cookies in Header/Footer
 export const dynamic = 'force-dynamic'
 
+function resolveMetadataBase(): URL | undefined {
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || '').trim()
+  if (site) {
+    try {
+      const normalized = site.endsWith('/') ? site.slice(0, -1) : site
+      return new URL(normalized)
+    } catch {
+      /* ignore */
+    }
+  }
+  if (process.env.VERCEL_URL) {
+    try {
+      const host = process.env.VERCEL_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')
+      return new URL(`https://${host}`)
+    } catch {
+      return undefined
+    }
+  }
+  return undefined
+}
+
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
@@ -46,8 +67,10 @@ export async function generateMetadata(): Promise<Metadata> {
     const siteName = settingsMap.site_name || 'Past and Present'
     const tagline = settingsMap.site_tagline || 'Vintage & Modern Treasures'
     const description = settingsMap.site_description || 'Discover unique vintage treasures and modern finds. Quality second-hand items and new products, all in one place.'
-    
+    const metadataBase = resolveMetadataBase()
+
     return {
+      ...(metadataBase ? { metadataBase } : {}),
       title: `${siteName} | ${tagline}`,
       description,
       icons: {
@@ -60,7 +83,9 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     }
   } catch {
+    const metadataBase = resolveMetadataBase()
     return {
+      ...(metadataBase ? { metadataBase } : {}),
       title: 'Past and Present | Vintage & Modern Treasures',
       description: 'Discover unique vintage treasures and modern finds. Quality second-hand items and new products, all in one place.',
       icons: {
