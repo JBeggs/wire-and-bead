@@ -1,8 +1,10 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { serverEcommerceApi } from '@/lib/api-server'
 export const dynamic = 'force-dynamic'
 import { Product } from '@/lib/types'
+import { buildProductOgImage, buildProductSeo } from '@/lib/product-seo'
 import { ArrowLeft, Shield, Info, Phone, FileText, Package, TimerReset, Truck } from 'lucide-react'
 import AddToCartButton from './AddToCartButton'
 import ProductGallery from './ProductGallery'
@@ -42,6 +44,37 @@ async function getProduct(slug: string): Promise<Product | null> {
   } catch (error) {
     console.error('Error fetching product:', error)
     return null
+  }
+}
+
+const COMPANY_NAME = 'Past and Present'
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params
+  const product = await getProduct(slug)
+  if (!product) {
+    return { title: `Product | ${COMPANY_NAME}` }
+  }
+
+  const { title, description, keywords } = buildProductSeo(product, COMPANY_NAME)
+  const ogImage = buildProductOgImage(product)
+
+  return {
+    title,
+    description,
+    ...(keywords ? { keywords } : {}),
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: product.name }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
   }
 }
 
