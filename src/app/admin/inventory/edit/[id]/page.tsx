@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import ProductForm from '@/components/products/ProductForm'
 import { ecommerceApi } from '@/lib/api'
 import { Product } from '@/lib/types'
@@ -29,13 +29,7 @@ export default function EditProductPage() {
     }
   }, [isAuthorized, authLoading, router])
 
-  useEffect(() => {
-    if (isAuthorized && id) {
-      fetchProduct()
-    }
-  }, [isAuthorized, id])
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true)
       const response: any = await ecommerceApi.products.get(id)
@@ -48,7 +42,13 @@ export default function EditProductPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id, showError])
+
+  useEffect(() => {
+    if (isAuthorized && id) {
+      fetchProduct()
+    }
+  }, [isAuthorized, id, fetchProduct])
 
   if (authLoading || !isAuthorized || loading) {
     return (

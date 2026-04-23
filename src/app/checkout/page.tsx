@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ecommerceApi } from '@/lib/api'
@@ -53,6 +53,8 @@ export default function CheckoutPage() {
   const { user, profile, loading: authLoading } = useAuth()
   const { showError } = useToast()
   const router = useRouter()
+  const deliveryMethodRef = useRef(deliveryMethod)
+  deliveryMethodRef.current = deliveryMethod
 
   const [formData, setFormData] = useState({
     business_name: '',
@@ -89,6 +91,73 @@ export default function CheckoutPage() {
     if (method !== 'pudo') setSelectedPudoLocation(null)
   }
 
+  const fetchCart = useCallback(async () => {
+    if (!user) return
+    try {
+      const response = await ecommerceApi.cart.get()
+      let cartData = normalizeCartResponse(response)
+
+      if (cartData?.items?.length) {
+        const enrichedItems = await Promise.all(
+          cartData.items.map(async (item: CartItem) => {
+            if (item.is_bundle !== true) return item
+            if (Array.isArray(item.bundle_images) && item.bundle_images.length > 0) return item
+            try {
+              const productId = item.product_id || item.product?.id
+              if (!productId) return item
+              const productResponse = await ecommerceApi.products.get(String(productId)) as { data?: unknown }
+              const product = productResponse?.data ?? productResponse
+              const images = getProductBundleImages(product as Parameters<typeof getProductBundleImages>[0])
+              if (images.length > 0) {
+                return { ...item, bundle_images: images }
+              }
+            } catch {
+              // Ignore
+            }
+            return item
+          })
+        )
+        cartData = { ...cartData, items: enrichedItems }
+      }
+
+      setCart(cartData)
+      const items = Array.isArray(cartData?.items) ? cartData.items : []
+      const getSupplierSlug = (item: any) =>
+        String(item?.supplier_slug ?? item?.supplierSlug ?? '').trim().toLowerCase()
+      const hasCg = items.some((item: any) => COURIER_GUY_SLUGS.has(getSupplierSlug(item)))
+      const hasGumtree = items.some((item: any) => getSupplierSlug(item) === 'gumtree')
+      const hasOther = items.some((item: any) => OTHER_COURIER_SLUGS.has(getSupplierSlug(item)))
+      const gumtreeBlocked = items.some((item: any) =>
+        getSupplierSlug(item) === 'gumtree' && item?.gumtree_origin_complete === false
+      )
+      setHasCourierGuyItems(hasCg)
+      setHasGumtreeItems(hasGumtree)
+      setHasOtherCourierItems(hasOther)
+      setGumtreeDeliveryBlocked(gumtreeBlocked)
+      if (!hasGumtree) setGumtreeFulfillmentMethod('deliver')
+      if (gumtreeBlocked) {
+        setAddressChecked(false)
+        setAddressQuoteMessage(GUMTREE_DELIVERY_BLOCK_MESSAGE)
+      }
+
+      const dm = deliveryMethodRef.current
+      if (!hasCg) {
+        setDeliveryMethod('standard')
+      } else if (!['standard', 'express', 'pudo'].includes(dm)) {
+        setDeliveryMethod('standard')
+      }
+
+      if (!cartData || !cartData.items || cartData.items.length === 0) {
+        router.push('/cart')
+      }
+    } catch (error) {
+      console.error('Error fetching cart:', error)
+      router.push('/cart')
+    } finally {
+      setLoading(false)
+    }
+  }, [user, router])
+
   useEffect(() => {
     if (!user) return
     fetchCart()
@@ -105,7 +174,7 @@ export default function CheckoutPage() {
         customer_phone: phone,
       }))
     }
-  }, [profile, user])
+  }, [profile, user, fetchCart])
 
   // Guests must log in before checkout (match JavaMellow)
   useEffect(() => {
@@ -132,7 +201,18 @@ export default function CheckoutPage() {
     ecommerceApi.cart.updateShipping(payload)
       .then(() => fetchCart())
       .catch(() => {})
-  }, [user, deliveryMethod, selectedPudoLocation, addressChecked, hasCourierGuyItems, courierShipping, cart, loading, processing])
+  }, [
+    user,
+    deliveryMethod,
+    selectedPudoLocation,
+    addressChecked,
+    hasCourierGuyItems,
+    courierShipping,
+    cart,
+    loading,
+    processing,
+    fetchCart,
+  ])
 
   // Refetch shipping quote when gumtree fulfillment changes (affects rate when mixed cart)
   useEffect(() => {
@@ -183,72 +263,6 @@ export default function CheckoutPage() {
       .finally(() => setQuoteLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps -- only refetch when gumtree method changes
   }, [gumtreeFulfillmentMethod])
-
-  const fetchCart = async () => {
-    if (!user) return
-    try {
-      const response = await ecommerceApi.cart.get()
-      let cartData = normalizeCartResponse(response)
-
-      if (cartData?.items?.length) {
-        const enrichedItems = await Promise.all(
-          cartData.items.map(async (item: CartItem) => {
-            if (item.is_bundle !== true) return item
-            if (Array.isArray(item.bundle_images) && item.bundle_images.length > 0) return item
-            try {
-              const productId = item.product_id || item.product?.id
-              if (!productId) return item
-              const productResponse = await ecommerceApi.products.get(String(productId)) as { data?: unknown }
-              const product = productResponse?.data ?? productResponse
-              const images = getProductBundleImages(product as Parameters<typeof getProductBundleImages>[0])
-              if (images.length > 0) {
-                return { ...item, bundle_images: images }
-              }
-            } catch {
-              // Ignore
-            }
-            return item
-          })
-        )
-        cartData = { ...cartData, items: enrichedItems }
-      }
-
-      setCart(cartData)
-      const items = Array.isArray(cartData?.items) ? cartData.items : []
-      const getSupplierSlug = (item: any) =>
-        String(item?.supplier_slug ?? item?.supplierSlug ?? '').trim().toLowerCase()
-      const hasCg = items.some((item: any) => COURIER_GUY_SLUGS.has(getSupplierSlug(item)))
-      const hasGumtree = items.some((item: any) => getSupplierSlug(item) === 'gumtree')
-      const hasOther = items.some((item: any) => OTHER_COURIER_SLUGS.has(getSupplierSlug(item)))
-      const gumtreeBlocked = items.some((item: any) =>
-        getSupplierSlug(item) === 'gumtree' && item?.gumtree_origin_complete === false
-      )
-      setHasCourierGuyItems(hasCg)
-      setHasGumtreeItems(hasGumtree)
-      setHasOtherCourierItems(hasOther)
-      setGumtreeDeliveryBlocked(gumtreeBlocked)
-      if (!hasGumtree) setGumtreeFulfillmentMethod('deliver')
-      if (gumtreeBlocked) {
-        setAddressChecked(false)
-        setAddressQuoteMessage(GUMTREE_DELIVERY_BLOCK_MESSAGE)
-      }
-
-      if (!hasCg) {
-        setDeliveryMethod('standard')
-      } else if (!['standard', 'express', 'pudo'].includes(deliveryMethod)) {
-        setDeliveryMethod('standard')
-      }
-
-      if (!cartData || !cartData.items || cartData.items.length === 0) {
-        router.push('/cart')
-      }
-    } catch (error) {
-      console.error('Error fetching cart:', error)
-      router.push('/cart')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const normalizeShippingAddressForQuote = () => ({
     address: formData.shipping_address,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ecommerceApi } from '@/lib/api'
 import { Cart, CartItem, SupplierDeliveryBreakdownItem } from '@/lib/types'
@@ -15,6 +15,8 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 const DELIVERY_GROUP_STORAGE_KEY = 'deliveryGroupMapV1'
 const DELIVERY_GROUP_TTL_MS = 6 * 60 * 60 * 1000
+
+const EMPTY_CART_ITEMS: CartItem[] = []
 
 type DeliveryGroupStore = Record<string, { slug: string; createdAt: number }>
 
@@ -121,7 +123,7 @@ export default function CartPage() {
   const { user } = useAuth()
   const { cart: contextCart, refreshCart, updateItemQuantity, removeItemFromCart, clearCart } = useCart()
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     if (!user) {
       await refreshCart()
       setLoading(false)
@@ -166,11 +168,11 @@ export default function CartPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, refreshCart])
 
   useEffect(() => {
     fetchCart()
-  }, [user])
+  }, [user, fetchCart])
 
   useEffect(() => {
     if (!user) {
@@ -209,27 +211,30 @@ export default function CartPage() {
       }
     }
     fetchQuote()
-  }, [user, cart?.id, cart?.items?.length])
+  }, [user, cart])
 
   useEffect(() => {
     const interval = window.setInterval(() => setTick(Date.now()), 1000)
     return () => window.clearInterval(interval)
   }, [])
 
-  const items = cart?.items || []
+  const items = useMemo(() => cart?.items ?? EMPTY_CART_ITEMS, [cart?.items])
 
-  const removeItem = async (productId: string, silent = false) => {
-    setUpdating(productId)
-    try {
-      await removeItemFromCart(productId)
-      if (!silent) showSuccess('Item removed from cart')
-      await fetchCart()
-    } catch (error: any) {
-      showError(error?.details?.error?.message || error.message || 'Failed to remove item')
-    } finally {
-      setUpdating(null)
-    }
-  }
+  const removeItem = useCallback(
+    async (productId: string, silent = false) => {
+      setUpdating(productId)
+      try {
+        await removeItemFromCart(productId)
+        if (!silent) showSuccess('Item removed from cart')
+        await fetchCart()
+      } catch (error: any) {
+        showError(error?.details?.error?.message || error.message || 'Failed to remove item')
+      } finally {
+        setUpdating(null)
+      }
+    },
+    [removeItemFromCart, showSuccess, showError, fetchCart],
+  )
 
   const handleClearCart = () => {
     setClearConfirmOpen(true)
@@ -262,7 +267,7 @@ export default function CartPage() {
       timeouts.push(timeout)
     })
     return () => timeouts.forEach((timeout) => window.clearTimeout(timeout))
-  }, [items])
+  }, [items, removeItem])
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     const item = items.find((entry) => getCartItemKey(entry) === productId)

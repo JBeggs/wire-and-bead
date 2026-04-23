@@ -40,11 +40,17 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
 
   useEffect(() => {
     if (!product.timed_expires_at) return
-    setCountdown(formatCountdown(product.timed_expires_at))
-    const interval = window.setInterval(() => {
-      setCountdown(formatCountdown(product.timed_expires_at))
-    }, 1000)
-    return () => window.clearInterval(interval)
+    let cancelled = false
+    const sync = () => setCountdown(formatCountdown(product.timed_expires_at))
+    const t = window.setTimeout(() => {
+      if (!cancelled) sync()
+    }, 0)
+    const interval = window.setInterval(sync, 1000)
+    return () => {
+      cancelled = true
+      window.clearTimeout(t)
+      window.clearInterval(interval)
+    }
   }, [product.timed_expires_at])
 
   const handleDelete = (e: React.MouseEvent) => {

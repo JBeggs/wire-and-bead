@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { ecommerceApi } from '@/lib/api'
@@ -103,7 +103,7 @@ export default function CustomerOrderDetailPage() {
   const [loadingTracking, setLoadingTracking] = useState(false)
   const [cancellingItem, setCancellingItem] = useState<string | null>(null)
 
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     try {
       setLoading(true)
       const response: any = await ecommerceApi.orders.get(id)
@@ -116,7 +116,7 @@ export default function CustomerOrderDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id, router, showError])
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -126,7 +126,7 @@ export default function CustomerOrderDetailPage() {
     if (user && id) {
       fetchOrder()
     }
-  }, [user, authLoading, id])
+  }, [user, authLoading, id, fetchOrder, router])
 
   const handleTrackShipment = async () => {
     setLoadingTracking(true)

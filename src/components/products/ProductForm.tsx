@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ecommerceApi } from '@/lib/api'
 import { Product, Category } from '@/lib/types'
 import { X, Upload, Loader2, Save, Image as ImageIcon, Trash2, Plus, Info, Search, Package, Truck, Tag as TagIcon, AlertCircle } from 'lucide-react'
@@ -71,29 +71,7 @@ export default function ProductForm({ product, onClose, onSuccess, inline = fals
   const [uploadingImage, setUploadingImage] = useState(false)
   const [tagInput, setTagInput] = useState('')
 
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  // Sync category_id if it changes in product or when categories load
-  useEffect(() => {
-    if (product && !formData.category_id) {
-      const catId = product.category_id || (typeof product.category === 'object' ? (product.category as any)?.id : product.category)
-      if (catId) {
-        setFormData(prev => ({ ...prev, category_id: String(catId) }))
-      }
-    }
-  }, [product, categories])
-
-  // Sync is_active with status
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      is_active: prev.status === 'active'
-    }))
-  }, [formData.status])
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setFetchingCategories(true)
       const data = await ecommerceApi.categories.list()
@@ -104,7 +82,29 @@ export default function ProductForm({ product, onClose, onSuccess, inline = fals
     } finally {
       setFetchingCategories(false)
     }
-  }
+  }, [showError])
+
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
+
+  // Sync category_id if it changes in product or when categories load
+  useEffect(() => {
+    if (product && !formData.category_id) {
+      const catId = product.category_id || (typeof product.category === 'object' ? (product.category as any)?.id : product.category)
+      if (catId) {
+        setFormData(prev => ({ ...prev, category_id: String(catId) }))
+      }
+    }
+  }, [product, categories, formData.category_id])
+
+  // Sync is_active with status
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      is_active: prev.status === 'active'
+    }))
+  }, [formData.status])
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {

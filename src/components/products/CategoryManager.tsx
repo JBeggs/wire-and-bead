@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ecommerceApi } from '@/lib/api'
 import { Category } from '@/lib/types'
 import { X, Plus, Trash2, Loader2 } from 'lucide-react'
@@ -19,11 +19,7 @@ export default function CategoryManager({ onClose }: CategoryManagerProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const { showSuccess, showError } = useToast()
 
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true)
       const data = await ecommerceApi.categories.list()
@@ -34,7 +30,11 @@ export default function CategoryManager({ onClose }: CategoryManagerProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showError])
+
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault()
