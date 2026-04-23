@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getCompany } from '@/lib/company'
+import { resolveLocale } from '@/lib/locale'
 import SafeImage from '@/components/media/SafeImage'
 import ThemeToggle from '@/components/theme/ThemeToggle'
 import { MobileNav } from './MobileNav'
@@ -15,6 +16,7 @@ const MENU_ITEMS = [
 export async function Header() {
   const company = await getCompany()
   const monogram = companyMonogram(company.name)
+  const locale = resolveLocale(company)
 
   return (
     <header className="bg-surface border-b border-border-default sticky top-0 z-50 shadow-sm">
@@ -23,7 +25,7 @@ export async function Header() {
         <div className="container-wide">
           <div className="flex items-center justify-between py-1 sm:py-1.5 text-[10px] sm:text-xs md:text-sm">
             <span className="font-heading italic tracking-wide truncate max-w-[60%] sm:max-w-none">
-              {new Date().toLocaleDateString('en-US', {
+              {new Date().toLocaleDateString(locale, {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',

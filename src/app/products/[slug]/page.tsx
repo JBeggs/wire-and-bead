@@ -11,6 +11,9 @@ import ProductGallery from './ProductGallery'
 import WhatsAppShareButton from './WhatsAppShareButton'
 import { getMinQuantity, getStockQuantity, isBundleProduct, isGumtreeProduct, isTimedProduct } from '@/lib/product-utils'
 import { getCompany } from '@/lib/company'
+import { getSiteSetting, coerceSiteNumber, coerceSiteString } from '@/lib/site-settings'
+import { formatMoney } from '@/lib/money'
+import { resolveLocale } from '@/lib/locale'
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>
@@ -84,11 +87,27 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
-  const product = await getProduct(slug)
+  const [product, company, thresholdRaw, payLabelRaw] = await Promise.all([
+    getProduct(slug),
+    getCompany(),
+    getSiteSetting('high_value_order_threshold'),
+    getSiteSetting('payment_provider_display_name'),
+  ])
 
   if (!product) {
     notFound()
   }
+
+  const locale = resolveLocale(company)
+  const highValueThreshold = coerceSiteNumber(thresholdRaw)
+  const paymentLabel = coerceSiteString(payLabelRaw) || 'our payment provider'
+  const priceFmt = formatMoney(Number(product.price), company.currency, locale)
+  const compareFmt =
+    product.compare_at_price != null
+      ? formatMoney(Number(product.compare_at_price), company.currency, locale)
+      : null
+  const isHighTouch =
+    highValueThreshold != null && highValueThreshold > 0 && Number(product.price) >= highValueThreshold
 
   const isVintage = Array.isArray(product.tags) 
     ? product.tags.some(t => (typeof t === 'string' ? t : t.name) === 'vintage')
@@ -139,11 +158,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <div className="flex flex-wrap items-center gap-4 mb-6">
                   <div className="flex items-baseline gap-2">
                     <span className={`text-4xl font-bold ${isVintage ? 'text-vintage-primary' : 'text-modern-primary'}`}>
-                      R{Number(product.price).toFixed(2)}
+                      {priceFmt}
                     </span>
-                    {hasDiscount && (
+                    {hasDiscount && compareFmt && (
                       <span className="text-xl text-text-muted line-through">
-                        R{Number(product.compare_at_price).toFixed(2)}
+                        {compareFmt}
                       </span>
                     )}
                   </div>
@@ -284,7 +303,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     <p className="text-sm text-text-light leading-relaxed">
                       Due to the unique nature of our collection, we provide a personalized service for every sale. 
                     </p>
-                    {Number(product.price) >= 2000 ? (
+                    {isHighTouch ? (
                       <div className="bg-vintage-background/50 p-4 rounded-lg border-l-4 border-vintage-primary animate-in fade-in slide-in-from-left-2">
                         <p className="text-sm text-text-light leading-relaxed">
                           A representative will contact you to arrange viewing, paperwork, and delivery details before any payment is taken.
@@ -293,7 +312,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     ) : (
                       <div className="bg-modern-background/50 p-4 rounded-lg border-l-4 border-modern-primary animate-in fade-in slide-in-from-left-2">
                         <p className="text-sm text-text-light leading-relaxed">
-                          You can pay securely via Yoco at checkout. We will then contact you to finalize delivery or collection.
+                          You can pay securely via {paymentLabel} at checkout. We will then contact you to finalize delivery or collection.
                         </p>
                       </div>
                     )}

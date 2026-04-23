@@ -12,23 +12,12 @@
  */
 
 import 'server-only'
-import { serverNewsApi } from './api-server'
 import { ensureAbsoluteImageUrl } from './image-utils'
 import { FALLBACK_COMPANY, companyMonogram, type Company } from './company-shared'
+import { getSiteSettingsMap } from './site-settings'
 
 export { FALLBACK_COMPANY, companyMonogram }
 export type { Company }
-
-type SiteSettingRow = { key: string; value: string; type?: string }
-
-function parseSetting(row: SiteSettingRow): unknown {
-  if (!row) return null
-  try {
-    return row.type === 'json' ? JSON.parse(row.value) : row.value
-  } catch {
-    return row.value
-  }
-}
 
 function coerceString(v: unknown): string {
   if (typeof v === 'string') return v
@@ -53,12 +42,7 @@ function normaliseImageUrl(v: unknown): string | null {
  */
 export async function getCompany(): Promise<Company> {
   try {
-    const raw: any = await serverNewsApi.siteSettings.list()
-    const rows: SiteSettingRow[] = Array.isArray(raw) ? raw : raw?.results || []
-    const map: Record<string, unknown> = {}
-    for (const row of rows) {
-      map[row.key] = parseSetting(row)
-    }
+    const map = await getSiteSettingsMap()
 
     const company: Company = {
       name: coerceString(map.site_name) || FALLBACK_COMPANY.name,
@@ -80,6 +64,8 @@ export async function getCompany(): Promise<Company> {
         whatsapp: coerceString(map.social_whatsapp ?? map.contact_whatsapp),
       },
       currency: coerceString(map.currency) || FALLBACK_COMPANY.currency,
+      localeTag: coerceString(map.site_locale) || FALLBACK_COMPANY.localeTag,
+      paymentProviderDisplayName: coerceString(map.payment_provider_display_name) || undefined,
     }
     return company
   } catch (err) {

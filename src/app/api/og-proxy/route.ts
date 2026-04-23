@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server'
 
+const DEFAULT_COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG || 'wire-and-bead'
+
 /** Only proxy media from the configured API host (prevents open redirect abuse). */
 function allowedMediaHostname(): string {
   try {
@@ -34,11 +36,15 @@ export async function GET(request: NextRequest) {
     return new Response('Forbidden', { status: 403 })
   }
 
+  const ua =
+    process.env.OG_PROXY_USER_AGENT?.trim() ||
+    `${DEFAULT_COMPANY_SLUG.replace(/[^a-zA-Z0-9._-]+/g, '-')}-OgProxy/1.0`
+
   const upstream = await fetch(upstreamUrl.toString(), {
     next: { revalidate: 86_400 },
     headers: {
       Accept: 'image/*',
-      'User-Agent': 'PastAndPresent-OgProxy/1.0',
+      'User-Agent': ua,
     },
   })
 

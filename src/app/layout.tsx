@@ -17,6 +17,7 @@ import {
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { getCompany } from '@/lib/company'
+import { resolveLocale } from '@/lib/locale'
 
 // Header/Footer/metadata all read cookies or live company data.
 export const dynamic = 'force-dynamic'
@@ -103,7 +104,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang={resolveLocale(company)}
       data-theme={initialTheme}
       className={fontClassNames}
       data-scroll-behavior="smooth"

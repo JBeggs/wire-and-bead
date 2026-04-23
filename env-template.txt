@@ -15,6 +15,10 @@ NEXT_PUBLIC_COMPANY_SLUG=wire-and-bead
 #
 # If unset, the app falls back to VERCEL_URL on Vercel (https://$VERCEL_URL) at runtime.
 
+# Optional: User-Agent for the OG image proxy when fetching upstream media (defaults to
+# `${NEXT_PUBLIC_COMPANY_SLUG}-OgProxy/1.0` with unsafe characters stripped).
+# OG_PROXY_USER_AGENT=MyStore-OgProxy/1.0
+
 # Optional: Override for local development
 # NEXT_PUBLIC_API_URL=http://localhost:8000/api
 

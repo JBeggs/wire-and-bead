@@ -143,7 +143,11 @@ export default function FooterClient({ company, menuItems }: FooterClientProps) 
             </div>
             <div className="mt-6">
               <h4 className="font-semibold text-sm mb-2">Secure Payments</h4>
-              <p className="opacity-80 text-sm">Powered by Yoco</p>
+              <p className="opacity-80 text-sm">
+                {company.paymentProviderDisplayName
+                  ? `Payments processed with ${company.paymentProviderDisplayName}`
+                  : 'Secure checkout via your configured payment provider'}
+              </p>
             </div>
           </div>
         </div>

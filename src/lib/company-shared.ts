@@ -26,6 +26,10 @@ export interface Company {
     whatsapp: string
   }
   currency: string
+  /** BCP 47 language tag from `SiteSetting.site_locale` (for `<html lang>` + `Intl`). */
+  localeTag: string
+  /** Optional label for payment footer copy (`SiteSetting.payment_provider_display_name`). */
+  paymentProviderDisplayName?: string
 }
 
 /**
@@ -45,6 +49,7 @@ export const FALLBACK_COMPANY: Company = {
   contact: { email: '', phone: '', address: '' },
   social: { facebook: '', twitter: '', instagram: '', whatsapp: '' },
   currency: 'ZAR',
+  localeTag: 'en-ZA',
 }
 
 /** Two-letter monogram derived from a company name (for favicons, placeholders). */

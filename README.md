@@ -1,6 +1,6 @@
 # Wire and Bead
 
-A Next.js e-commerce storefront (fork of the Past and Present template, brand-neutralised). Branding (name, logo, tagline, contact) is read at runtime from the tenant's `Company` record in the shared Django CRM backend — set `NEXT_PUBLIC_COMPANY_SLUG` to point this app at your tenant.
+A Next.js e-commerce storefront (fork of the Past and Present template, brand-neutralised). Branding and **tenant-specific business rules** are read at runtime from django-crm **`SiteSetting`** rows (via `/news/site-settings/`) and normalised through `getCompany()` / `getSiteSetting()` — set `NEXT_PUBLIC_COMPANY_SLUG` to point this app at your tenant. See [PLAN-01-WIRE-AND-BEAD.md](../PLAN-01-WIRE-AND-BEAD.md) for the full contract (policy keys, money/locale helpers, `storefront_shelves` JSON).
 
 ## Overview
 
@@ -9,9 +9,19 @@ This storefront is a multi-tenant template. Install-time setup (`/admin/setup` o
 ## Feature Breakdown
 
 ### E-commerce
-- **Products** (`/products`): Browse all products. Filter by condition (vintage/new), category, search. Product detail pages with gallery.
+- **Products** (`/products`): Browse all products by category and search. **Shelf chips** (Featured, Vintage, etc.) render only when django-crm exposes a public JSON `SiteSetting` key `storefront_shelves` — there is **no** hardcoded tenant taxonomy in this repo (avoids “active in admin but missing on the storefront” bugs). Without that setting, the default view lists all active products.
+
+  Example `storefront_shelves` value (type `json`, `is_public=true`). Each `filter` entry maps to public product list query params:
+
+  ```json
+  [
+    { "id": "featured", "label": "Featured", "icon": "star", "filter": { "featured": true } },
+    { "id": "vintage", "label": "Vintage", "icon": "clock", "filter": { "condition": "vintage", "exclude_featured": true } },
+    { "id": "bundles", "label": "Bundles", "icon": "package", "filter": { "bundle_only": true } }
+  ]
+  ```
 - **Cart** (`/cart`): Shopping cart with quantity updates and removal.
-- **Checkout** (`/checkout`): Full checkout flow with Yoco payment. Delivery options: standard (R65/free over R500), express (R120), Pudo pickup (R30), collect in-store (free). Pudo location search when Pudo selected.
+- **Checkout** (`/checkout`): Full checkout flow with the tenant’s configured payment gateway (typically Yoco when enabled in django-crm). Delivery options and copy still include integration-specific labels where the UI is not yet fully driven by `SiteSetting` — see PLAN-01 for the target end state.
 - **Admin Inventory** (`/admin/inventory`): Product CRUD, category manager, **product export (CSV)**. Admin and business_owner roles only.
 - **Admin Orders** (`/admin/orders`): Order list with status filter, Create Shipment for paid orders (Courier Guy integration).
 

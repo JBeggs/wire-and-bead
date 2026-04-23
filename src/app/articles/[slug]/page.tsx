@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { serverNewsApi } from '@/lib/api-server'
 import { Article } from '@/lib/types'
 import { Calendar, User, ArrowLeft, Clock } from 'lucide-react'
+import { getCompany } from '@/lib/company'
+import { resolveLocale } from '@/lib/locale'
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>
@@ -21,7 +23,8 @@ async function getArticle(slug: string): Promise<Article | null> {
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params
-  const article = await getArticle(slug)
+  const [article, company] = await Promise.all([getArticle(slug), getCompany()])
+  const locale = resolveLocale(company)
 
   if (!article) {
     notFound()
@@ -79,7 +82,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             {article.published_at && (
               <span className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                {new Date(article.published_at).toLocaleDateString('en-US', {
+                {new Date(article.published_at).toLocaleDateString(locale, {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'

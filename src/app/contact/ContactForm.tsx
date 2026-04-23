@@ -96,11 +96,7 @@ export default function ContactForm({ contact, businessHours }: ContactFormProps
                 <p key={day}>{DAY_LABELS[day] || day}: {time || '—'}</p>
               ))
             ) : (
-              <>
-                <p>Monday - Friday: 9am - 5pm</p>
-                <p>Saturday: 10am - 2pm</p>
-                <p>Sunday: Closed</p>
-              </>
+              <p className="text-text">Business hours are not published yet. Please reach out using the contact details above.</p>
             )}
           </div>
         </div>
