@@ -2,67 +2,85 @@
 
 import Link from 'next/link'
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react'
+import { companyMonogram, type Company } from '@/lib/company-shared'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 
 interface FooterClientProps {
-  siteName: string
-  description: string
-  contact: {
-    address: string
-    phone: string
-    email: string
-  }
-  social: {
-    facebook: string
-    twitter: string
-    instagram: string
-  }
+  company: Company
   menuItems: Array<{ title: string; href: string }>
 }
 
-export default function FooterClient({ siteName, description, contact, social, menuItems }: FooterClientProps) {
+export default function FooterClient({ company, menuItems }: FooterClientProps) {
+  const monogram = companyMonogram(company.name)
+  const { contact, social } = company
+
   return (
-    <footer className="bg-vintage-primary text-white">
+    <footer className="bg-primary text-[rgb(var(--color-text-inverse))]">
       <div className="container-wide">
-        {/* Main Footer Content */}
+        {/* Main footer */}
         <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* About Section */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-modern-accent to-vintage-accent rounded-lg flex items-center justify-center">
-                <span className="text-white font-playfair font-bold text-lg">P&P</span>
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-md font-heading font-bold"
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgb(var(--color-accent)) 0%, rgb(var(--color-primary-hover)) 100%)',
+                }}
+              >
+                {monogram}
               </div>
-              <span className="font-bold font-playfair text-lg">{siteName}</span>
+              <span className="font-bold font-heading text-lg">{company.name}</span>
             </div>
-            <p className="text-green-100 mb-4">{description}</p>
+            <p className="opacity-90 mb-4">{company.description}</p>
             <div className="flex space-x-4">
               {social.facebook && (
-                <a href={social.facebook} target="_blank" rel="noopener noreferrer" className="text-green-200 hover:text-modern-accent transition-colors">
+                <a
+                  href={social.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-80 hover:opacity-100 hover:text-accent transition"
+                >
                   <Facebook className="w-5 h-5" />
                 </a>
               )}
               {social.twitter && (
-                <a href={social.twitter} target="_blank" rel="noopener noreferrer" className="text-green-200 hover:text-modern-accent transition-colors">
+                <a
+                  href={social.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-80 hover:opacity-100 hover:text-accent transition"
+                >
                   <Twitter className="w-5 h-5" />
                 </a>
               )}
               {social.instagram && (
-                <a href={social.instagram} target="_blank" rel="noopener noreferrer" className="text-green-200 hover:text-modern-accent transition-colors">
+                <a
+                  href={social.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-80 hover:opacity-100 hover:text-accent transition"
+                >
                   <Instagram className="w-5 h-5" />
                 </a>
               )}
             </div>
           </div>
 
-          {/* Shop Links */}
           <div>
-            <h3 className="font-semibold font-playfair text-lg mb-4">Shop</h3>
+            <h3 className="font-semibold font-heading text-lg mb-4">Shop</h3>
             <ul className="space-y-2">
-              <li><Link href="/products" className="text-green-100 hover:text-modern-accent transition-colors">All Products</Link></li>
-              <li><Link href="/products?condition=vintage" className="text-green-100 hover:text-modern-accent transition-colors">Vintage Items</Link></li>
-              <li><Link href="/products?condition=new" className="text-green-100 hover:text-modern-accent transition-colors">New Arrivals</Link></li>
-              {menuItems.slice(0, 3).map((item) => (
+              <li>
+                <Link href="/products" className="opacity-90 hover:opacity-100 hover:text-accent transition">
+                  All Products
+                </Link>
+              </li>
+              {menuItems.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-green-100 hover:text-modern-accent transition-colors">
+                  <Link
+                    href={item.href}
+                    className="opacity-90 hover:opacity-100 hover:text-accent transition"
+                  >
                     {item.title}
                   </Link>
                 </li>
@@ -70,59 +88,87 @@ export default function FooterClient({ siteName, description, contact, social, m
             </ul>
           </div>
 
-          {/* Customer Service */}
           <div>
-            <h3 className="font-semibold font-playfair text-lg mb-4">Customer Service</h3>
+            <h3 className="font-semibold font-heading text-lg mb-4">Customer Service</h3>
             <ul className="space-y-2">
-              <li><Link href="/shipping" className="text-green-100 hover:text-modern-accent transition-colors">Shipping Info</Link></li>
-              <li><Link href="/returns" className="text-green-100 hover:text-modern-accent transition-colors">Returns & Exchanges</Link></li>
-              <li><Link href="/faq" className="text-green-100 hover:text-modern-accent transition-colors">FAQ</Link></li>
-              <li><Link href="/contact" className="text-green-100 hover:text-modern-accent transition-colors">Contact Us</Link></li>
-              <li><Link href="/about" className="text-green-100 hover:text-modern-accent transition-colors">About Us</Link></li>
+              <li>
+                <Link href="/shipping" className="opacity-90 hover:opacity-100 hover:text-accent transition">
+                  Shipping Info
+                </Link>
+              </li>
+              <li>
+                <Link href="/returns" className="opacity-90 hover:opacity-100 hover:text-accent transition">
+                  Returns &amp; Exchanges
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="opacity-90 hover:opacity-100 hover:text-accent transition">
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="opacity-90 hover:opacity-100 hover:text-accent transition">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="opacity-90 hover:opacity-100 hover:text-accent transition">
+                  About Us
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Contact Info */}
           <div>
-            <h3 className="font-semibold font-playfair text-lg mb-4">Contact</h3>
+            <h3 className="font-semibold font-heading text-lg mb-4">Contact</h3>
             <div className="space-y-3">
               {contact.address && (
                 <div className="flex items-start space-x-2">
-                  <MapPin className="w-4 h-4 text-green-200 mt-0.5" />
-                  <span className="text-green-100 text-sm">{contact.address}</span>
+                  <MapPin className="w-4 h-4 opacity-80 mt-0.5" />
+                  <span className="opacity-90 text-sm">{contact.address}</span>
                 </div>
               )}
               {contact.phone && (
                 <div className="flex items-center space-x-2">
-                  <Phone className="w-4 h-4 text-green-200" />
-                  <span className="text-green-100">{contact.phone}</span>
+                  <Phone className="w-4 h-4 opacity-80" />
+                  <span className="opacity-90">{contact.phone}</span>
                 </div>
               )}
               {contact.email && (
                 <div className="flex items-center space-x-2">
-                  <Mail className="w-4 h-4 text-green-200" />
-                  <span className="text-green-100">{contact.email}</span>
+                  <Mail className="w-4 h-4 opacity-80" />
+                  <span className="opacity-90">{contact.email}</span>
                 </div>
               )}
             </div>
-            
-            {/* Payment Methods */}
             <div className="mt-6">
               <h4 className="font-semibold text-sm mb-2">Secure Payments</h4>
-              <p className="text-green-200 text-sm">Powered by Yoco</p>
+              <p className="opacity-80 text-sm">Powered by Yoco</p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="py-6 border-t border-green-700">
+        {/* Theme row */}
+        <div className="py-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <span className="text-xs uppercase tracking-[0.2em] opacity-70 mr-3">Theme</span>
+            <ThemeToggle variant="full" />
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="py-6 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-green-200 text-sm">
-              © {new Date().getFullYear()} {siteName}. All rights reserved.
+            <p className="opacity-80 text-sm">
+              © {new Date().getFullYear()} {company.name}. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="text-green-200 hover:text-modern-accent text-sm transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="text-green-200 hover:text-modern-accent text-sm transition-colors">Terms of Service</Link>
+              <Link href="/privacy" className="opacity-80 hover:opacity-100 hover:text-accent text-sm transition">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="opacity-80 hover:opacity-100 hover:text-accent text-sm transition">
+                Terms of Service
+              </Link>
             </div>
           </div>
         </div>

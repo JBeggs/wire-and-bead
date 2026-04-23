@@ -5,6 +5,7 @@ import { ecommerceApi } from '@/lib/api'
 import { Product, Category } from '@/lib/types'
 import { X, Upload, Loader2, Save, Image as ImageIcon, Trash2, Plus, Info, Search, Package, Truck, Tag as TagIcon, AlertCircle } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
+import { useCompany } from '@/contexts/CompanyContext'
 
 interface ProductFormProps {
   product?: Product
@@ -16,6 +17,7 @@ interface ProductFormProps {
 type TabType = 'general' | 'inventory' | 'shipping' | 'seo' | 'media'
 
 export default function ProductForm({ product, onClose, onSuccess, inline = false }: ProductFormProps) {
+  const company = useCompany()
   const [activeTab, setActiveTab] = useState<TabType>('general')
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
@@ -653,7 +655,7 @@ export default function ProductForm({ product, onClose, onSuccess, inline = fals
                   maxLength={60}
                 />
                 <div className="flex justify-between text-[10px] uppercase font-bold text-text-muted px-1">
-                  <span>Preview: {formData.seo_title || formData.name} | Past and Present</span>
+                  <span>Preview: {formData.seo_title || formData.name} | {company.name}</span>
                   <span>{formData.seo_title.length}/60</span>
                 </div>
               </div>

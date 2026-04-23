@@ -12,7 +12,7 @@ export default defineConfig({
     env: {
       NODE_ENV: 'development',
       NEXT_PUBLIC_API_URL: 'http://localhost:8000/api',
-      NEXT_PUBLIC_COMPANY_SLUG: 'past-and-present',
+      NEXT_PUBLIC_COMPANY_SLUG: 'wire-and-bead',
     },
     coverage: {
       provider: 'v8',

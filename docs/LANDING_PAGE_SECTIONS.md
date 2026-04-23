@@ -1,6 +1,6 @@
-# Past and Present: Landing Page Sections – Vintage Treasures & New Arrivals
+# Wire and Bead: Landing Page Sections – Vintage Treasures & New Arrivals
 
-This document describes how the Past and Present project implements the **Vintage Treasures** and **New Arrivals** sections on the landing page.
+This document describes how the Wire and Bead storefront (forked from the Past and Present template) implements the **Vintage Treasures** and **New Arrivals** sections on the landing page.
 
 ---
 
@@ -180,7 +180,7 @@ export interface Tag {
 **File:** `src/lib/api-server.ts`
 
 - **Base URL:** `NEXT_PUBLIC_API_URL` (default: `https://3pillars.pythonanywhere.com/api`)
-- **Company slug:** `NEXT_PUBLIC_COMPANY_SLUG` (default: `'past-and-present'`)
+- **Company slug:** `NEXT_PUBLIC_COMPANY_SLUG` (default: `'wire-and-bead'`)
 
 ### Endpoint
 

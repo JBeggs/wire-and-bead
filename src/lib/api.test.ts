@@ -1,12 +1,12 @@
 /**
- * API Client unit tests for Past and Present
+ * API Client unit tests for the storefront
  * Uses mocked fetch; aligns with Django API response shapes
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { authApi, apiClient, ecommerceApi } from './api';
 
 const API_BASE = 'http://localhost:8000/api';
-const COMPANY_SLUG = 'past-and-present';
+const COMPANY_SLUG = 'wire-and-bead';
 
 function createMockResponse(body: Record<string, unknown>, ok = true, status = ok ? 200 : 400) {
   return {
@@ -35,7 +35,7 @@ describe('authApi', () => {
         access: 'new-access',
         refresh: 'new-refresh',
         user: { id: '1', username: 'testuser' },
-        company: { id: 'company-1', name: 'Past and Present' },
+        company: { id: 'company-1', name: 'Wire and Bead' },
       };
       const fetchMock = vi.fn().mockResolvedValue(createMockResponse(mockResponse));
       vi.stubGlobal('fetch', fetchMock);
@@ -74,7 +74,7 @@ describe('authApi', () => {
       const mockResponse = {
         tokens: { access: 'reg-access', refresh: 'reg-refresh' },
         user: { id: '2', email: 'new@test.com' },
-        company: { id: 'company-1', name: 'Past and Present' },
+        company: { id: 'company-1', name: 'Wire and Bead' },
       };
       const fetchMock = vi.fn().mockResolvedValue(createMockResponse(mockResponse));
       vi.stubGlobal('fetch', fetchMock);

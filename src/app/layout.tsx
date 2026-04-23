@@ -1,15 +1,24 @@
 import type { Metadata } from 'next'
-import { Inter, Playfair_Display } from 'next/font/google'
+import { cookies } from 'next/headers'
+import { Cormorant_Garamond, Inter, Nunito, Playfair_Display } from 'next/font/google'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
-import { serverNewsApi } from '@/lib/api-server'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { CartProvider } from '@/contexts/CartContext'
+import { CompanyProvider } from '@/contexts/CompanyContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
+import {
+  DEFAULT_THEME,
+  THEMES,
+  THEME_BOOTSTRAP_SCRIPT,
+  type Theme,
+} from '@/contexts/theme-config'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { getCompany } from '@/lib/company'
 
-// Force dynamic rendering since we use cookies in Header/Footer
+// Header/Footer/metadata all read cookies or live company data.
 export const dynamic = 'force-dynamic'
 
 function resolveMetadataBase(): URL | undefined {
@@ -33,93 +42,94 @@ function resolveMetadataBase(): URL | undefined {
   return undefined
 }
 
-const inter = Inter({ 
+// All three theme font pairs load together so the toggle is instant. Each
+// `next/font` instance exposes a CSS variable that the theme tokens refer to.
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' })
+const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap'
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cormorant',
+  display: 'swap',
 })
+const nunito = Nunito({ subsets: ['latin'], variable: '--font-nunito', display: 'swap' })
 
-const playfair = Playfair_Display({ 
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap'
-})
-
-// Get dynamic metadata from database - exported so Next.js calls it (avoids blocking layout)
 export async function generateMetadata(): Promise<Metadata> {
+  const metadataBase = resolveMetadataBase()
   try {
-    const settings = await serverNewsApi.siteSettings.list() as any
-    const settingsArray = Array.isArray(settings) ? settings : (settings?.results || [])
-    
-    function tryParseJSON(value: string) {
-      try {
-        return JSON.parse(value)
-      } catch {
-        return value
-      }
-    }
-
-    const settingsMap = settingsArray.reduce((acc: Record<string, any>, setting: any) => ({
-      ...acc,
-      [setting.key]: tryParseJSON(setting.value)
-    }), {})
-    
-    const siteName = settingsMap.site_name || 'Past and Present'
-    const tagline = settingsMap.site_tagline || 'Vintage & Modern Treasures'
-    const description = settingsMap.site_description || 'Discover unique vintage treasures and modern finds. Quality second-hand items and new products, all in one place.'
-    const metadataBase = resolveMetadataBase()
-
+    const company = await getCompany()
+    const title = company.tagline ? `${company.name} | ${company.tagline}` : company.name
     return {
       ...(metadataBase ? { metadataBase } : {}),
-      title: `${siteName} | ${tagline}`,
-      description,
-      icons: {
-        icon: '/favicon.png',
-      },
+      title,
+      description: company.description,
+      icons: { icon: '/favicon.png' },
       openGraph: {
-        title: `${siteName} | ${tagline}`,
-        description,
+        title,
+        description: company.description,
         type: 'website',
+        images: company.ogImageUrl ? [{ url: company.ogImageUrl }] : ['/api/og-default'],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description: company.description,
+        images: [company.ogImageUrl ?? '/api/og-default'],
       },
     }
   } catch {
-    const metadataBase = resolveMetadataBase()
     return {
       ...(metadataBase ? { metadataBase } : {}),
-      title: 'Past and Present | Vintage & Modern Treasures',
-      description: 'Discover unique vintage treasures and modern finds. Quality second-hand items and new products, all in one place.',
-      icons: {
-        icon: '/favicon.png',
-      },
+      title: 'Your Store',
+      description: 'Discover our collection.',
+      icons: { icon: '/favicon.png' },
     }
   }
 }
 
-export default function RootLayout({
+function readThemeCookie(value: string | undefined): Theme {
+  if (value && (THEMES as readonly string[]).includes(value)) return value as Theme
+  return DEFAULT_THEME
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const [cookieStore, company] = await Promise.all([cookies(), getCompany()])
+  const initialTheme = readThemeCookie(cookieStore.get('site_theme')?.value)
+  const fontClassNames = `${inter.variable} ${playfair.variable} ${cormorant.variable} ${nunito.variable}`
+
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`} data-scroll-behavior="smooth">
+    <html
+      lang="en"
+      data-theme={initialTheme}
+      className={fontClassNames}
+      data-scroll-behavior="smooth"
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* No-flash theme bootstrap: runs synchronously before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
-      <body className={`${inter.className} antialiased bg-vintage-background`}>
-        <ToastProvider>
-          <AuthProvider>
-            <CartProvider>
-              <div className="min-h-screen flex flex-col">
-                <Header />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
-              </div>
-            </CartProvider>
-          </AuthProvider>
-        </ToastProvider>
+      <body className={`${inter.className} antialiased bg-bg`}>
+        <ThemeProvider initialTheme={initialTheme}>
+          <CompanyProvider company={company}>
+            <ToastProvider>
+              <AuthProvider>
+                <CartProvider>
+                  <div className="min-h-screen flex flex-col">
+                    <Header />
+                    <main className="flex-1">{children}</main>
+                    <Footer />
+                  </div>
+                </CartProvider>
+              </AuthProvider>
+            </ToastProvider>
+          </CompanyProvider>
+        </ThemeProvider>
         <SpeedInsights />
       </body>
     </html>

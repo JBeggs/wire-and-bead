@@ -1,6 +1,8 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { getCompany } from '@/lib/company'
 
-const faqs = [
+function buildFaqs(companyName: string) {
+  return [
   {
     question: 'What is the condition of vintage items?',
     answer: 'All vintage items are carefully inspected and honestly described. We use a grading system: "Like New" (minimal wear), "Good" (light wear, fully functional), "Fair" (visible wear but functional), and "Vintage" (shows age but has character). Each listing includes detailed photos and condition notes.'
@@ -30,12 +32,15 @@ const faqs = [
     answer: 'Care instructions vary by item type. Generally, vintage items should be handled gently and stored properly. We include care tips with each vintage purchase. Feel free to contact us for specific advice.'
   },
   {
-    question: 'Can I sell my vintage items through Past and Present?',
+    question: `Can I sell my vintage items through ${companyName}?`,
     answer: 'We\'re always looking for quality vintage pieces! If you have items you\'d like to sell, please contact us with photos and descriptions. We\'ll review them and get back to you within 48 hours.'
   },
-]
+  ]
+}
 
-export default function FAQPage() {
+export default async function FAQPage() {
+  const company = await getCompany()
+  const faqs = buildFaqs(company.name)
   return (
     <div className="min-h-screen bg-vintage-background">
       {/* Header */}

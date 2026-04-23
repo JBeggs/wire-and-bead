@@ -98,7 +98,7 @@ function isGalleryPlaceholderUrl(url: string): boolean {
 function fallbackOgImageUrl(): string {
   const site = publicSiteOrigin()
   if (site) {
-    return `${site}/past-and-present-logo.png`
+    return `${site}/api/og-default`
   }
   return `${backendOriginForMedia()}/og-image.jpg`
 }

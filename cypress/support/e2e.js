@@ -1,13 +1,13 @@
 // ***********************************************************
 // Support file for E2E tests
-// Past and Present uses auth_token, refresh_token, company_id (separate keys)
+// Storefront uses auth_token, refresh_token, company_id (separate keys)
 // ***********************************************************
 
 Cypress.Commands.add('login', (username, password) => {
   const user = username || Cypress.env('testUser');
   const pass = password || Cypress.env('testPassword');
   const apiUrl = Cypress.env('apiUrl');
-  const companySlug = Cypress.env('companySlug') || 'past-and-present';
+  const companySlug = Cypress.env('companySlug') || 'wire-and-bead';
 
   cy.session([user, pass], () => {
     cy.request('POST', `${apiUrl}/auth/login/`, {
@@ -17,7 +17,7 @@ Cypress.Commands.add('login', (username, password) => {
     }).then((res) => {
       expect(res.status).to.eq(200);
       const userId = res.body.user?.id ?? res.body.user?.pk ?? 1;
-      const userEmail = res.body.user?.email ?? 'testuser@past-and-present.test';
+      const userEmail = res.body.user?.email ?? 'testuser@wire-and-bead.test';
       const usernameVal = res.body.user?.username ?? user;
       // Stub profile API so AuthContext gets user even if app points to wrong API URL
       cy.intercept('GET', '**/news/profiles/me/**', {

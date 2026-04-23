@@ -6,7 +6,7 @@
 import { cookies } from 'next/headers'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://3pillars.pythonanywhere.com/api'
-const DEFAULT_COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG || 'past-and-present'
+const DEFAULT_COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG || 'wire-and-bead'
 
 class ServerApiClient {
   private baseURL: string

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { serverEcommerceApi, serverNewsApi } from '@/lib/api-server'
 import AboutPageClient, { AnimatedSection, AnimatedCard } from '@/components/about/AboutPageClient'
 import { Clock, Sparkles, Heart, Leaf, TrendingUp, Zap, Link2, Package } from 'lucide-react'
+import { getCompany } from '@/lib/company'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,10 +33,12 @@ async function getSampleProducts() {
 }
 
 export default async function AboutPage() {
-  const [aboutArticle, sampleProducts] = await Promise.all([
+  const [aboutArticle, sampleProducts, company] = await Promise.all([
     getAboutContent(),
     getSampleProducts(),
+    getCompany(),
   ])
+  const companyName = company.name
 
   const sections = [
     { id: 'story', label: 'Our Story' },
@@ -70,7 +73,7 @@ export default async function AboutPage() {
           ) : (
             <div className="prose prose-lg max-w-none">
               <p className="text-lg text-text-light leading-relaxed mb-6">
-                Past and Present was born from a simple belief: beautiful things deserve a second life,
+                {companyName} was born from a simple belief: beautiful things deserve a second life,
                 and quality should be accessible to everyone. We curate a unique collection of vintage
                 treasures alongside carefully selected modern pieces, creating a shopping experience
                 that celebrates both sustainability and style.
@@ -93,7 +96,7 @@ export default async function AboutPage() {
           </h2>
           <div className="space-y-6 text-text-light leading-relaxed">
             <p className="text-lg">
-              Past and Present operates on a lean, technology-driven business model designed for scalability
+              {companyName} operates on a lean, technology-driven business model designed for scalability
               and predictable margins. We source products through established channels, apply consistent
               markup structures, and sell directly to consumers via our e-commerce platform.
             </p>
@@ -205,7 +208,7 @@ export default async function AboutPage() {
           </div>
           <h2 className="text-2xl font-bold font-playfair text-text mt-12 mb-6">Our Promise</h2>
           <p className="text-text-light leading-relaxed mb-6">
-            When you shop with Past and Present, you&apos;re not just buying a product—you&apos;re
+            When you shop with {companyName}, you&apos;re not just buying a product—you&apos;re
             becoming part of a community that values quality, sustainability, and the stories
             that objects carry with them.
           </p>
@@ -238,12 +241,12 @@ export default async function AboutPage() {
                       : 'product-card-modern'
                   }`}
                 >
-                  <div className="relative overflow-hidden aspect-square">
+                  <div className="relative aspect-square overflow-hidden bg-gray-50">
                     {product.image ? (
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center">

@@ -1,4 +1,4 @@
-// TypeScript types for Past and Present e-commerce platform
+// TypeScript types for the Wire and Bead e-commerce platform
 
 export type UserRole = 'user' | 'admin' | 'editor' | 'author' | 'business_owner' | 'subscriber'
 export type ArticleStatus = 'draft' | 'scheduled' | 'published' | 'archived' | 'featured'

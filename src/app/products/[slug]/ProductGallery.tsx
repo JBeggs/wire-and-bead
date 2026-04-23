@@ -30,12 +30,12 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
 
   return (
     <div className="space-y-4">
-      {/* Main Image */}
-      <div className="relative aspect-square rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm group flex items-center justify-center">
+      {/* Main image: letterbox tall/wide sources instead of cropping (object-cover). */}
+      <div className="relative flex min-h-[280px] max-h-[min(90vh,920px)] w-full items-center justify-center overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 p-3 shadow-sm">
         <img
           src={activeImage}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="max-h-[min(86vh,880px)] w-auto max-w-full object-contain"
           onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
         />
         <div className="absolute top-4 left-4 flex flex-col gap-2">
@@ -55,7 +55,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
             <button
               key={index}
               onClick={() => setActiveImage(img)}
-              className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+              className={`aspect-square rounded-lg overflow-hidden border-2 bg-gray-50 transition-all ${
                 activeImage === img 
                   ? 'border-vintage-primary shadow-md scale-95' 
                   : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100'
@@ -66,7 +66,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
                 alt={`${product.name} thumbnail ${index + 1}`}
                 loading="lazy"
                 decoding="async"
-                className="w-full h-full object-cover"
+                className="h-full w-full object-contain"
                 onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
               />
             </button>

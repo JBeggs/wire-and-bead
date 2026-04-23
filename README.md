@@ -1,10 +1,10 @@
-# Past and Present
+# Wire and Bead
 
-A Next.js e-commerce site for vintage and modern treasures, built using components from the Riverside Herald project.
+A Next.js e-commerce storefront (fork of the Past and Present template, brand-neutralised). Branding (name, logo, tagline, contact) is read at runtime from the tenant's `Company` record in the shared Django CRM backend — set `NEXT_PUBLIC_COMPANY_SLUG` to point this app at your tenant.
 
 ## Overview
 
-Past and Present sells both vintage (second-hand) and new products, with a hybrid theme and content-driven marketing via articles. All data is managed through the shared Django CRM backend.
+This storefront is a multi-tenant template. Install-time setup (`/admin/setup` on first login) creates the Company record; all pages then render with that brand's data. The default tenant slug is `wire-and-bead`.
 
 ## Feature Breakdown
 
@@ -68,7 +68,7 @@ Articles are fetched from `/news/articles/` with `status=published`, `category`,
 3. Configure environment variables:
    ```
    NEXT_PUBLIC_API_URL=https://3pillars.pythonanywhere.com/api
-   NEXT_PUBLIC_COMPANY_SLUG=past-and-present
+   NEXT_PUBLIC_COMPANY_SLUG=wire-and-bead
    ```
 
 4. Run development server:
@@ -81,7 +81,7 @@ Articles are fetched from `/news/articles/` with `status=published`, `category`,
 ## Project Structure
 
 ```
-past-and-present/
+wire-and-bead/
 ├── src/
 │   ├── app/                 # Next.js App Router pages
 │   │   ├── products/        # Product listing and detail pages
@@ -122,7 +122,7 @@ past-and-present/
 
 This site connects to the Django CRM backend. Ensure:
 
-1. Company `past-and-present` is registered in the backend
+1. Company `wire-and-bead` is registered in the backend (or run the first-login `/admin/setup` wizard to create it)
 2. Products are created with `is_vintage` flag for categorization
 3. Articles are created for content pages (home, about, etc.)
 4. Yoco integration is configured for payments

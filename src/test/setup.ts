@@ -1,5 +1,5 @@
 /**
- * Vitest setup for Past and Present
+ * Vitest setup for Wire and Bead
  */
 import { beforeEach } from 'vitest';
 import '@testing-library/jest-dom';

@@ -10,6 +10,7 @@ import AddToCartButton from './AddToCartButton'
 import ProductGallery from './ProductGallery'
 import WhatsAppShareButton from './WhatsAppShareButton'
 import { getMinQuantity, getStockQuantity, isBundleProduct, isGumtreeProduct, isTimedProduct } from '@/lib/product-utils'
+import { getCompany } from '@/lib/company'
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>
@@ -47,17 +48,17 @@ async function getProduct(slug: string): Promise<Product | null> {
   }
 }
 
-const COMPANY_NAME = 'Past and Present'
-
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params
-  const product = await getProduct(slug)
+  const [product, company] = await Promise.all([getProduct(slug), getCompany()])
+  const companyName = company.name
+
   if (!product) {
-    return { title: `Product | ${COMPANY_NAME}` }
+    return { title: `Product | ${companyName}` }
   }
 
-  const { title, description, keywords } = buildProductSeo(product, COMPANY_NAME)
-  const ogImage = buildProductOgImage(product)
+  const { title, description, keywords } = buildProductSeo(product, companyName)
+  const ogImage = buildProductOgImage(product) || company.ogImageUrl || '/api/og-default'
   const site = publicSiteOrigin()
   const ogUrl = site ? `${site}/products/${slug}` : undefined
 
@@ -102,12 +103,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const minQty = getMinQuantity(product)
 
   return (
-    <div className="min-h-screen bg-vintage-background pb-20">
+    <div className="min-h-screen bg-bg pb-20">
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-gray-200 sticky top-[73px] z-30">
+      <div className="bg-surface border-b border-border-default sticky top-[73px] z-30">
         <div className="container-wide py-4">
           <div className="flex items-center justify-between gap-4">
-            <Link href="/products" className="flex items-center text-text-muted hover:text-vintage-primary transition-colors font-medium flex-shrink-0" prefetch={false}>
+            <Link href="/products" className="flex items-center text-text-muted hover:text-primary transition-colors font-medium flex-shrink-0" prefetch={false}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back<span className="hidden md:inline"> to Products</span>
             </Link>

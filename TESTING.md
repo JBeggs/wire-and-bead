@@ -1,4 +1,4 @@
-# Past and Present – Testing Guide
+# Wire and Bead – Testing Guide
 
 Next.js 16 e-commerce and articles site. Consumes Django API. Runs on port 3001.
 
@@ -14,7 +14,7 @@ Next.js 16 e-commerce and articles site. Consumes Django API. Runs on port 3001.
 ### Run the App Locally
 
 ```bash
-cd past-and-present
+cd wire-and-bead
 npm install
 
 # Create .env.local for local backend
@@ -62,29 +62,22 @@ npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
 ### Prerequisites
 
 - Django running at `http://localhost:8000`
-- Past and Present company with products
+- A Company registered with slug `wire-and-bead` (plus test user and sample products)
 - **`.env.local`** with `NEXT_PUBLIC_API_URL=http://localhost:8000/api` (required; Next.js reads this at build time, so the dev server must be started with it for E2E)
 
 ### Seed Django Test Data
 
-From the `django-crm` directory:
-
-```bash
-cd django-crm
-python manage.py seed_past_and_present_e2e
-```
-
-This creates the Past and Present company (slug: `past-and-present`), test user (`testuser`/`testpass`), and sample products.
+Register the tenant via the first-login `/admin/setup` wizard or an admin fixture, then create a test user (`testuser`/`testpass`) and at least one published product for the `wire-and-bead` company.
 
 ### Run E2E Tests
 
 1. Ensure `.env.local` has `NEXT_PUBLIC_API_URL=http://localhost:8000/api` (see Quick Start)
 2. Start Django: `python manage.py runserver 8000`
-3. Start Next.js: `cd past-and-present && npm run dev` (port 3001)
+3. Start Next.js: `cd wire-and-bead && npm run dev` (port 3001)
 4. Run Cypress:
 
 ```bash
-cd past-and-present
+cd wire-and-bead
 npm run test:e2e        # Headless run (CI-friendly)
 npm run test:e2e:open   # Open Cypress UI for interactive debugging
 ```

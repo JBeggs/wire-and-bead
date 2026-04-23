@@ -1,4 +1,7 @@
-export default function TermsPage() {
+import { getCompany } from '@/lib/company'
+
+export default async function TermsPage() {
+  const company = await getCompany()
   return (
     <div className="min-h-screen bg-vintage-background">
       {/* Header */}
@@ -18,7 +21,7 @@ export default function TermsPage() {
         <div className="container-narrow">
           <div className="prose prose-lg max-w-none">
             <p className="text-text-light">
-              Welcome to Past and Present. By using our website and services, you agree 
+              Welcome to {company.name}. By using our website and services, you agree
               to these terms. Please read them carefully.
             </p>
 
@@ -61,8 +64,8 @@ export default function TermsPage() {
 
             <h2 className="text-2xl font-bold font-playfair text-text mt-8">6. Intellectual Property</h2>
             <p className="text-text-light">
-              All content on this website, including text, images, and logos, is owned by 
-              Past and Present and protected by copyright laws. You may not use our content 
+              All content on this website, including text, images, and logos, is owned by
+              {' '}{company.name} and protected by copyright laws. You may not use our content
               without permission.
             </p>
 
@@ -74,8 +77,8 @@ export default function TermsPage() {
 
             <h2 className="text-2xl font-bold font-playfair text-text mt-8">8. Limitation of Liability</h2>
             <p className="text-text-light">
-              To the maximum extent permitted by law, Past and Present shall not be liable 
-              for any indirect, incidental, or consequential damages arising from your use 
+              To the maximum extent permitted by law, {company.name} shall not be liable
+              for any indirect, incidental, or consequential damages arising from your use
               of our services.
             </p>
 

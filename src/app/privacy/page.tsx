@@ -1,4 +1,7 @@
-export default function PrivacyPage() {
+import { getCompany } from '@/lib/company'
+
+export default async function PrivacyPage() {
+  const company = await getCompany()
   return (
     <div className="min-h-screen bg-vintage-background">
       {/* Header */}
@@ -18,7 +21,7 @@ export default function PrivacyPage() {
         <div className="container-narrow">
           <div className="prose prose-lg max-w-none">
             <p className="text-text-light">
-              At Past and Present, we are committed to protecting your privacy. This policy 
+              At {company.name}, we are committed to protecting your privacy. This policy
               explains how we collect, use, and safeguard your personal information.
             </p>
 

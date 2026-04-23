@@ -1,11 +1,11 @@
 /**
  * API Client for Django REST API
- * Adapted from Riverside Herald for Past and Present
+ * Adapted from Riverside Herald for the Wire and Bead storefront
  */
 import type { ShippingQuoteData } from './types'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://3pillars.pythonanywhere.com/api'
-const DEFAULT_COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG || 'past-and-present'
+const DEFAULT_COMPANY_SLUG = process.env.NEXT_PUBLIC_COMPANY_SLUG || 'wire-and-bead'
 
 export interface ApiError {
   message: string

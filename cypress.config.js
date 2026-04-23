@@ -10,7 +10,7 @@ export default defineConfig({
       apiUrl: 'http://localhost:8000/api',
       testUser: process.env.CYPRESS_TEST_USER || 'testuser',
       testPassword: process.env.CYPRESS_TEST_PASSWORD || 'testpass',
-      companySlug: 'past-and-present',
+      companySlug: 'wire-and-bead',
     },
   },
 });

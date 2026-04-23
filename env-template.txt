@@ -1,15 +1,15 @@
-# Past and Present Environment Variables
+# Wire and Bead Environment Variables
 # Copy this file to .env.local and fill in the values
 
 # API Configuration
 NEXT_PUBLIC_API_URL=https://3pillars.pythonanywhere.com/api
-NEXT_PUBLIC_COMPANY_SLUG=past-and-present
+NEXT_PUBLIC_COMPANY_SLUG=wire-and-bead
 
 # Canonical public URL of this deployment (no trailing slash). Used for Open Graph / WhatsApp
 # previews (absolute og:image and og:url). Set in Vercel → Project → Settings → Environment Variables.
 #
 # Preview example:
-# NEXT_PUBLIC_SITE_URL=https://past-and-present-six.vercel.app
+# NEXT_PUBLIC_SITE_URL=https://wire-and-bead.vercel.app
 #
 # Production: use your real domain, e.g. https://www.your-domain.com
 #

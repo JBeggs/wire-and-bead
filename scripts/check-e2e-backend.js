@@ -15,7 +15,7 @@ async function check() {
       body: JSON.stringify({
         username: testUser,
         password: testPass,
-        company_slug: 'past-and-present',
+        company_slug: 'wire-and-bead',
       }),
     });
     if (!res.ok) {
@@ -24,9 +24,7 @@ async function check() {
         console.error('');
         console.error('E2E backend not ready: testuser login failed (401).');
         console.error('');
-        console.error('Run the Django seed first:');
-        console.error('  cd django-crm');
-        console.error('  python manage.py seed_past_and_present_e2e');
+        console.error('Seed the wire-and-bead tenant in django-crm first.');
         console.error('');
         process.exit(1);
       }
@@ -35,7 +33,7 @@ async function check() {
     }
 
     // Verify products exist (required for cart/checkout E2E)
-    const productsRes = await fetch(`${apiUrl}/v1/public/past-and-present/products/?page_size=1`);
+    const productsRes = await fetch(`${apiUrl}/v1/public/wire-and-bead/products/?page_size=1`);
     if (!productsRes.ok) {
       console.error('');
       console.error('Products API failed:', productsRes.status);
@@ -45,11 +43,9 @@ async function check() {
     const products = productsData?.data ?? productsData?.results ?? [];
     if (!Array.isArray(products) || products.length === 0) {
       console.error('');
-      console.error('E2E backend not ready: no products for past-and-present.');
+      console.error('E2E backend not ready: no products for wire-and-bead.');
       console.error('');
-      console.error('Run the Django seed:');
-      console.error('  cd django-crm');
-      console.error('  python manage.py seed_past_and_present_e2e');
+      console.error('Seed the wire-and-bead tenant via the django-crm admin or fixtures.');
       console.error('');
       process.exit(1);
     }

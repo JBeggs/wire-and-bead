@@ -50,7 +50,7 @@ function CoverageDisplay({ data }: { data: Record<string, unknown> | null }) {
       <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-6 text-amber-800">
         <p className="font-medium mb-2">No coverage data available</p>
         <p className="text-sm opacity-90 mb-2">
-          From the <code className="bg-black/10 px-2 py-1 rounded">past-and-present</code> directory, run:
+          From the <code className="bg-black/10 px-2 py-1 rounded">wire-and-bead</code> directory, run:
         </p>
         <p className="font-mono text-sm bg-black/10 px-3 py-2 rounded">npm run test:coverage:public</p>
         <p className="text-xs opacity-80 mt-2">Then refresh this page.</p>
@@ -130,7 +130,7 @@ export default function TestingPage() {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold text-text mb-2">Testing</h1>
           <p className="text-text-light mb-10">
-            How we ensure quality and reliability across the Past and Present codebase.
+            How we ensure quality and reliability across the Wire and Bead codebase.
           </p>
 
           <section className="mb-12">

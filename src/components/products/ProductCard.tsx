@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Product } from '@/lib/types'
-import { Clock, Sparkles, Edit2, Trash2, Package, TimerReset } from 'lucide-react'
+import { Edit2, Trash2, Package, TimerReset } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { ecommerceApi } from '@/lib/api'
 import { useToast } from '@/contexts/ToastContext'
@@ -12,6 +12,7 @@ import { formatCountdown, getMinQuantity, isBundleProduct, isTimedProduct } from
 import { getProductBundleImages } from '@/lib/image-utils'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import HomeProductQuickModal from '@/components/home/HomeProductQuickModal'
+import SafeImage from '@/components/media/SafeImage'
 
 interface ProductCardProps {
   product: Product
@@ -34,13 +35,8 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
   const bundleImages = getProductBundleImages(product)
   const mainImage = bundleImages[0]
   const [countdown, setCountdown] = useState(() => formatCountdown(product.timed_expires_at))
-  const [mainImageLoaded, setMainImageLoaded] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [homeModalOpen, setHomeModalOpen] = useState(false)
-
-  useEffect(() => {
-    setMainImageLoaded(false)
-  }, [mainImage])
 
   useEffect(() => {
     if (!product.timed_expires_at) return
@@ -62,41 +58,28 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
       {isBundle && bundleImages.length > 1 ? (
         <div className="product-image-bundle grid grid-cols-2 gap-1 w-full h-full p-1">
           {bundleImages.slice(0, 4).map((url, i) => (
-            <div key={`${url}-${i}`} className="bundle-cell aspect-square rounded-lg overflow-hidden bg-white border border-gray-100 flex items-center justify-center">
-              <img
-                src={url}
-                alt={i === 0 ? product.name : ''}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
-              />
-            </div>
+            <SafeImage
+              key={`${url}-${i}`}
+              src={url}
+              alt={i === 0 ? product.name : ''}
+              kind="product-square"
+              fill
+              sizes="(max-width: 640px) 50vw, 20vw"
+              className="bundle-cell aspect-square rounded-lg overflow-hidden bg-surface border border-border-default"
+              imgClassName="object-contain group-hover:scale-105 transition-transform duration-300"
+            />
           ))}
         </div>
-      ) : mainImage ? (
-        <>
-          {!mainImageLoaded && (
-            <div className="absolute inset-0 bg-gray-200 animate-pulse z-[1]" />
-          )}
-          <img
-            src={mainImage}
-            alt={product.name}
-            loading="lazy"
-            decoding="async"
-            className={`w-full h-full object-cover group-hover:scale-105 transition-opacity duration-300 ${mainImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoad={() => setMainImageLoaded(true)}
-            onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
-          />
-        </>
       ) : (
-        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-          {isVintage ? (
-            <Clock className="w-12 h-12 text-vintage-primary/30" />
-          ) : (
-            <Sparkles className="w-12 h-12 text-modern-primary/30" />
-          )}
-        </div>
+        <SafeImage
+          src={mainImage}
+          alt={product.name}
+          kind="product-square"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="absolute inset-0"
+          imgClassName="object-contain group-hover:scale-[1.02] transition-transform duration-300"
+        />
       )}
     </>
   )
@@ -124,7 +107,7 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
             : ''
         }`}
       >
-        <div className="relative overflow-hidden aspect-square">
+        <div className="relative overflow-hidden aspect-square bg-gray-50">
           <Link href={`/products/${product.slug}`} className="absolute inset-0 z-0 block" prefetch={false}>
             {imageArea}
           </Link>

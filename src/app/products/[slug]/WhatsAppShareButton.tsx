@@ -1,16 +1,20 @@
 'use client'
 
 import { Product } from '@/lib/types'
+import { useCompany } from '@/contexts/CompanyContext'
 
 interface WhatsAppShareButtonProps {
   product: Product
+  /** Optional override — falls back to the active company name. */
   companyName?: string
 }
 
 export default function WhatsAppShareButton({
   product,
-  companyName = 'Past and Present',
+  companyName,
 }: WhatsAppShareButtonProps) {
+  const company = useCompany()
+  const brand = companyName ?? company.name
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
     const url = typeof window !== 'undefined' ? window.location.href : ''
@@ -24,11 +28,11 @@ export default function WhatsAppShareButton({
         ? `R${price.toFixed(2)} (was R${compare.toFixed(2)})`
         : `R${price.toFixed(2)}`
     const msg = [
-      `Discover ${product.name}${companyName ? ` from ${companyName}` : ''}`,
+      `Discover ${product.name}${brand ? ` from ${brand}` : ''}`,
       desc,
       priceLine,
       url,
-      companyName ? `Love ${companyName}` : '',
+      brand ? `Love ${brand}` : '',
     ]
       .filter(Boolean)
       .join('\n\n')
