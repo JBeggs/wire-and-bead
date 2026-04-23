@@ -13,6 +13,7 @@ import {
   Truck,
   Wrench,
   ShoppingBasket,
+  Tag,
 } from 'lucide-react'
 import { Suspense } from 'react'
 import ProductsSortSelect from '@/components/products/ProductsSortSelect'
@@ -25,13 +26,35 @@ import {
   HARDWARE_CATEGORY_SLUG,
   NEW_LISTING_EXCLUDED_CATEGORY_SLUGS,
 } from '@/lib/store-shelves'
+import {
+  unwrapEcommerceList,
+  unwrapEcommerceProductList,
+  sanitizeListPage,
+} from '@/lib/ecommerce-list'
+
+type StorefrontCategory = { id: string; name: string; slug: string }
+
+async function getStorefrontCategories(): Promise<StorefrontCategory[]> {
+  try {
+    const res = await serverEcommerceApi.categories.list()
+    const rows = unwrapEcommerceList<{ id: string; name: string; slug?: string | null }>(res)
+    const reserved = new Set([HARDWARE_CATEGORY_SLUG, CONSUMABLES_CATEGORY_SLUG])
+    return rows
+      .filter((c) => c.slug && c.name && !reserved.has(String(c.slug).toLowerCase()))
+      .map((c) => ({ id: String(c.id), name: c.name, slug: String(c.slug) }))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+  } catch (error) {
+    console.error('Error fetching storefront categories:', error)
+    return []
+  }
+}
 
 interface ProductsPageProps {
   searchParams: Promise<{
     condition?: string
     category?: string
     search?: string
-    page?: string
+    page?: string | string[]
     featured?: string
     sort?: string
     bundle_only?: string
@@ -47,7 +70,7 @@ async function getProducts(params: {
   condition?: string
   category?: string
   search?: string
-  page?: string
+  page?: string | string[]
   featured?: string
   sort?: string
   bundle_only?: string
@@ -65,7 +88,9 @@ async function getProducts(params: {
         ? (params.exclude_tags?.trim() ? params.exclude_tags : CATEGORY_SHELF_EXCLUDE_TAGS)
         : params.exclude_tags || undefined
 
-    const response = await serverEcommerceApi.products.list({
+    const page = sanitizeListPage(params.page)
+
+    const listArgs = {
       is_active: true,
       category: params.category,
       search: params.search,
@@ -74,7 +99,7 @@ async function getProducts(params: {
       /** Matches home rails: vintage & new pools exclude already-featured items. */
       exclude_featured:
         params.condition === 'vintage' || params.condition === 'new' ? true : undefined,
-      page: params.page ? parseInt(params.page) : 1,
+      page,
       page_size: 24,
       ordering: params.sort || undefined,
       bundle_only: params.bundle_only === 'true' ? 'true' : undefined,
@@ -90,24 +115,34 @@ async function getProducts(params: {
       exclude_category:
         params.condition === 'new' ? NEW_LISTING_EXCLUDED_CATEGORY_SLUGS : undefined,
       supplier_slug: params.supplier_slug || undefined,
-    })
+    }
 
-    const raw = Array.isArray(response) ? response : (response as any)?.data || (response as any)?.results || []
+    let response = await serverEcommerceApi.products.list(listArgs)
+    let raw = unwrapEcommerceProductList(response) as Product[]
+
+    if (raw.length === 0 && page > 1) {
+      response = await serverEcommerceApi.products.list({ ...listArgs, page: 1 })
+      raw = unwrapEcommerceProductList(response) as Product[]
+    }
+
     const products = raw
-      .filter((p: Product) => p.status !== 'archived')
+      .filter((p: Product) => p && typeof p === 'object' && p.status !== 'archived')
       .filter((p: any) => {
         if (!params.supplier_slug) return true
         return String(p.supplier_slug || '').toLowerCase() === params.supplier_slug.toLowerCase()
       })
-    const pagination = (response as any)?.pagination
+    const pagination =
+      response && typeof response === 'object' && !Array.isArray(response)
+        ? (response as { pagination?: Record<string, unknown> }).pagination
+        : undefined
 
     return {
       products,
       pagination: pagination
         ? {
-            page: pagination.page ?? 1,
-            totalPages: pagination.totalPages ?? 1,
-            total: pagination.total ?? products.length,
+            page: Number(pagination.page) || 1,
+            totalPages: Number(pagination.totalPages) || 1,
+            total: Number(pagination.total) || products.length,
           }
         : { page: 1, totalPages: 1, total: products.length },
     }
@@ -119,7 +154,10 @@ async function getProducts(params: {
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const params = await searchParams
-  const { products, pagination } = await getProducts(params)
+  const [{ products, pagination }, categories] = await Promise.all([
+    getProducts(params),
+    getStorefrontCategories(),
+  ])
   const isVintage = params.condition === 'vintage'
   const isNew = params.condition === 'new'
   const isFeatured = params.featured === 'true'
@@ -153,6 +191,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   if (params.supplier_slug) searchParamsForNav.supplier_slug = params.supplier_slug
   if (params.delivery_group) searchParamsForNav.delivery_group = params.delivery_group
 
+  const crmCategoryName = params.category
+    ? categories.find((c) => c.slug === params.category)?.name
+    : undefined
+  const crmCategoryTitleFallback =
+    params.category && !isHardwareCategory && !isConsumablesCategory
+      ? params.category
+          .split('-')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ')
+      : ''
+
   const title = isSupplierGroup
     ? 'Delivery Group'
     : isBundles
@@ -169,7 +218,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 ? 'New Arrivals'
                 : isFeatured
                   ? 'Featured Products'
-                  : 'All Products'
+                  : params.category && !isHardwareCategory && !isConsumablesCategory
+                    ? crmCategoryName || crmCategoryTitleFallback
+                    : 'All Products'
 
   const isAllShelves =
     !params.condition &&
@@ -203,7 +254,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 ? 'Fresh finds and modern essentials. Bundles, hardware, and consumables use their own pages.'
                 : isFeatured
                   ? 'Hand-picked favorites and standout items'
-                  : 'Browse our complete collection of products'
+                  : params.category && !isHardwareCategory && !isConsumablesCategory
+                    ? `Products in the ${crmCategoryName || crmCategoryTitleFallback} category.`
+                    : 'Browse our complete collection of products'
 
   const makeHref = (overrides: Record<string, string | null>) => {
     const query = new URLSearchParams()
@@ -496,6 +549,41 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   </span>
                 )}
               </div>
+
+              {categories.length > 0 && (
+                <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-gray-200">
+                  <div className="flex items-center gap-2 text-sm text-text-muted">
+                    <Tag className="w-5 h-5 flex-shrink-0" aria-hidden />
+                    <span>Shop by category</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2" data-cy="category-chips">
+                    {categories.map((cat) => {
+                      const isCatActive = params.category === cat.slug
+                      return (
+                        <Link
+                          key={cat.id}
+                          href={makeHref({
+                            category: cat.slug,
+                            condition: null,
+                            featured: null,
+                            bundle_only: null,
+                            timed_only: null,
+                            exclude_tags: null,
+                            exclude_bundles: null,
+                            supplier_slug: null,
+                            delivery_group: null,
+                          })}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                            isCatActive ? 'bg-vintage-primary text-white' : 'bg-gray-100 text-text hover:bg-gray-200'
+                          }`}
+                        >
+                          {cat.name}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

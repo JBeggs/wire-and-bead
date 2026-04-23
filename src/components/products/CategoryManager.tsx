@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { ecommerceApi } from '@/lib/api'
+import { unwrapEcommerceList } from '@/lib/ecommerce-list'
 import { Category } from '@/lib/types'
 import { X, Plus, Trash2, Loader2 } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
@@ -23,7 +24,7 @@ export default function CategoryManager({ onClose }: CategoryManagerProps) {
     try {
       setLoading(true)
       const data = await ecommerceApi.categories.list()
-      setCategories(Array.isArray(data) ? data : (data as any)?.data || (data as any)?.results || [])
+      setCategories(unwrapEcommerceList<Category>(data))
     } catch (error) {
       console.error('Error fetching categories:', error)
       showError('Failed to load categories')

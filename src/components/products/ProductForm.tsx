@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { ecommerceApi } from '@/lib/api'
+import { unwrapEcommerceList } from '@/lib/ecommerce-list'
 import { Product, Category } from '@/lib/types'
 import { X, Upload, Loader2, Save, Image as ImageIcon, Trash2, Plus, Info, Search, Package, Truck, Tag as TagIcon, AlertCircle } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
@@ -75,7 +76,7 @@ export default function ProductForm({ product, onClose, onSuccess, inline = fals
     try {
       setFetchingCategories(true)
       const data = await ecommerceApi.categories.list()
-      setCategories(Array.isArray(data) ? data : (data as any)?.data || (data as any)?.results || [])
+      setCategories(unwrapEcommerceList<Category>(data))
     } catch (error) {
       console.error('Error fetching categories:', error)
       showError('Failed to load categories')

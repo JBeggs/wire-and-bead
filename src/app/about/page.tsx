@@ -3,6 +3,7 @@ import { serverEcommerceApi, serverNewsApi } from '@/lib/api-server'
 import AboutPageClient, { AnimatedSection, AnimatedCard } from '@/components/about/AboutPageClient'
 import { Clock, Sparkles, Heart, Leaf, TrendingUp, Zap, Link2, Package } from 'lucide-react'
 import { getCompany } from '@/lib/company'
+import { unwrapEcommerceProductList } from '@/lib/ecommerce-list'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,8 +24,8 @@ async function getSampleProducts() {
       serverEcommerceApi.products.list({ is_active: true, featured: true, page_size: 3 }),
       serverEcommerceApi.products.list({ is_active: true, tags: 'vintage', page_size: 2 }),
     ])
-    const featuredRaw = Array.isArray(featured) ? featured : (featured as any)?.data || (featured as any)?.results || []
-    const vintageRaw = Array.isArray(vintage) ? vintage : (vintage as any)?.data || (vintage as any)?.results || []
+    const featuredRaw = unwrapEcommerceProductList(featured)
+    const vintageRaw = unwrapEcommerceProductList(vintage)
     const combined = [...featuredRaw, ...vintageRaw].filter((p: any) => p.status !== 'archived')
     return combined.slice(0, 4)
   } catch {

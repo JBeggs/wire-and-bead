@@ -5,6 +5,7 @@ import { Product } from '@/lib/types'
 import ProductCard from '@/components/products/ProductCard'
 import SafeImage from '@/components/media/SafeImage'
 import { getCompany } from '@/lib/company'
+import { unwrapEcommerceProductList } from '@/lib/ecommerce-list'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,14 +17,16 @@ function sortProductsByName(products: Product[]): Product[] {
 
 async function getFeaturedProducts(): Promise<Product[]> {
   try {
-    const res: any = await serverEcommerceApi.products.list({
+    const res: unknown = await serverEcommerceApi.products.list({
       is_active: true,
       featured: true,
       page_size: 8,
       ordering: 'name',
     })
-    const raw = Array.isArray(res) ? res : res?.data || res?.results || []
-    return sortProductsByName(raw.filter((p: Product) => p.status !== 'archived')).slice(0, 8)
+    const raw = unwrapEcommerceProductList(res) as Product[]
+    return sortProductsByName(
+      raw.filter((p: Product) => p && typeof p === 'object' && p.status !== 'archived'),
+    ).slice(0, 8)
   } catch (error) {
     console.error('Error fetching featured products:', error)
     return []

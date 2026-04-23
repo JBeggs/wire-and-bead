@@ -118,7 +118,25 @@ class ServerApiClient {
       }
       if (response.status === 404) {
         console.warn(`API 404 at ${url.toString()}`)
-        // Return empty array for list endpoints, or null for single object endpoints
+        /**
+         * DRF pagination returns 404 for out-of-range `page` with a JSON body like
+         * `{ success: true, data: [...], pagination }` on some deployments, or `{ detail: "..." }`.
+         * If the body still includes a `data` array, use it so storefront grids do not go blank.
+         */
+        const isPublicProductList =
+          endpoint.includes('/v1/public/') &&
+          endpoint.includes('/products') &&
+          !endpoint.includes('/products/slug/')
+        if (isPublicProductList) {
+          try {
+            const body = (await response.clone().json()) as Record<string, unknown>
+            if (body && body.success !== false && Array.isArray(body.data)) {
+              return body as unknown as T
+            }
+          } catch {
+            /* fall through */
+          }
+        }
         if (endpoint.endsWith('/') || endpoint.includes('?')) {
           return [] as unknown as T
         }
