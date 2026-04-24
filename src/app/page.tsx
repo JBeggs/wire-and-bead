@@ -4,10 +4,69 @@ import { serverEcommerceApi } from '@/lib/api-server'
 import { Product } from '@/lib/types'
 import ProductCard from '@/components/products/ProductCard'
 import SafeImage from '@/components/media/SafeImage'
-import { getCompany } from '@/lib/company'
+import { getCompany, type Company } from '@/lib/company'
 import { unwrapEcommerceProductList } from '@/lib/ecommerce-list'
+import PageHero from '@/components/hero/PageHero'
 
 export const dynamic = 'force-dynamic'
+
+function DefaultHomeHero({ company }: { company: Company }) {
+  return (
+    <section className="relative overflow-hidden">
+      <div className="absolute inset-0">
+        <SafeImage
+          src={company.heroImageUrl}
+          alt=""
+          kind="hero"
+          fill
+          priority
+          sizes="100vw"
+          className="absolute inset-0"
+          imgClassName="object-cover"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(135deg, rgb(var(--color-primary) / 0.85) 0%, rgb(var(--color-primary) / 0.55) 45%, rgb(var(--color-accent) / 0.55) 100%)',
+          }}
+          aria-hidden
+        />
+      </div>
+
+      <div className="relative container-wide py-24 md:py-32 text-[rgb(var(--color-text-inverse))]">
+        <div className="max-w-2xl">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading mb-4">
+            {company.name}
+          </h1>
+          {company.tagline && (
+            <p className="text-base md:text-lg uppercase tracking-[0.25em] opacity-90 mb-6">
+              {company.tagline}
+            </p>
+          )}
+          <p className="text-lg md:text-xl opacity-95 mb-8 max-w-xl">
+            {company.description}
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/products"
+              className="btn btn-accent text-base px-6 py-3"
+            >
+              <ShoppingBag className="w-5 h-5 mr-2" />
+              Shop the Collection
+            </Link>
+            <Link
+              href="/about"
+              className="btn btn-secondary text-base px-6 py-3"
+            >
+              Our Story
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function sortProductsByName(products: Product[]): Product[] {
   return [...products].sort((a, b) =>
@@ -41,60 +100,8 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <SafeImage
-            src={company.heroImageUrl}
-            alt=""
-            kind="hero"
-            fill
-            priority
-            sizes="100vw"
-            className="absolute inset-0"
-            imgClassName="object-cover"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                'linear-gradient(135deg, rgb(var(--color-primary) / 0.85) 0%, rgb(var(--color-primary) / 0.55) 45%, rgb(var(--color-accent) / 0.55) 100%)',
-            }}
-            aria-hidden
-          />
-        </div>
-
-        <div className="relative container-wide py-24 md:py-32 text-[rgb(var(--color-text-inverse))]">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading mb-4">
-              {company.name}
-            </h1>
-            {company.tagline && (
-              <p className="text-base md:text-lg uppercase tracking-[0.25em] opacity-90 mb-6">
-                {company.tagline}
-              </p>
-            )}
-            <p className="text-lg md:text-xl opacity-95 mb-8 max-w-xl">
-              {company.description}
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/products"
-                className="btn btn-accent text-base px-6 py-3"
-              >
-                <ShoppingBag className="w-5 h-5 mr-2" />
-                Shop the Collection
-              </Link>
-              <Link
-                href="/about"
-                className="btn btn-secondary text-base px-6 py-3"
-              >
-                Our Story
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero — admin-uploaded hero wins; otherwise fall back to the default layout */}
+      <PageHero pageSlug="home" fallback={<DefaultHomeHero company={company} />} />
 
       {/* Featured */}
       <section className="py-16 bg-bg">

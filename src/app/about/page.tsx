@@ -4,6 +4,7 @@ import AboutPageClient, { AnimatedSection, AnimatedCard } from '@/components/abo
 import { Clock, Sparkles, Heart, Leaf, TrendingUp, Zap, Link2, Package } from 'lucide-react'
 import { getCompany } from '@/lib/company'
 import { unwrapEcommerceProductList } from '@/lib/ecommerce-list'
+import PageHero from '@/components/hero/PageHero'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,6 +52,9 @@ export default async function AboutPage() {
 
   return (
     <div className="min-h-screen bg-vintage-background">
+      {/* Optional admin-uploaded hero; renders nothing when disabled. */}
+      <PageHero pageSlug="about" fallback={null} />
+
       {/* Hero */}
       <section className="py-16 md:py-20 bg-gradient-to-br from-vintage-primary to-vintage-primary-dark text-white">
         <div className="container-wide">

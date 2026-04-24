@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react'
 import { companyMonogram, type Company } from '@/lib/company-shared'
+import SafeImage from '@/components/media/SafeImage'
 import ThemeToggle from '@/components/theme/ThemeToggle'
 
 interface FooterClientProps {
@@ -21,15 +22,14 @@ export default function FooterClient({ company, menuItems }: FooterClientProps) 
         <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-md font-heading font-bold"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgb(var(--color-accent)) 0%, rgb(var(--color-primary-hover)) 100%)',
-                }}
-              >
-                {monogram}
-              </div>
+              <SafeImage
+                src={company.logoUrl}
+                alt=""
+                kind="logo"
+                monogram={monogram}
+                enforceAspect
+                className="h-10 w-10 rounded-md overflow-hidden flex-shrink-0"
+              />
               <span className="font-bold font-heading text-lg">{company.name}</span>
             </div>
             <p className="opacity-90 mb-4">{company.description}</p>
