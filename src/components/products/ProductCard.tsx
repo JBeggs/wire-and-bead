@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Product } from '@/lib/types'
-import { Edit2, Trash2, Package, TimerReset } from 'lucide-react'
+import { Clock, Sparkles, Edit2, Trash2, Package, TimerReset } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { ecommerceApi } from '@/lib/api'
 import { useToast } from '@/contexts/ToastContext'
@@ -12,7 +12,6 @@ import { formatCountdown, getMinQuantity, isBundleProduct, isTimedProduct } from
 import { getProductBundleImages } from '@/lib/image-utils'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import HomeProductQuickModal from '@/components/home/HomeProductQuickModal'
-import SafeImage from '@/components/media/SafeImage'
 
 interface ProductCardProps {
   product: Product
@@ -34,9 +33,43 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
   const minQty = getMinQuantity(product)
   const bundleImages = getProductBundleImages(product)
   const mainImage = bundleImages[0]
+  const showBundleGrid = isBundle && bundleImages.length > 1
+  const bundleDisplayUrls = showBundleGrid ? bundleImages.slice(0, 4) : []
+  const bundleKey = bundleDisplayUrls.join('|')
+  const nBundleTiles = bundleDisplayUrls.length
+
   const [countdown, setCountdown] = useState(() => formatCountdown(product.timed_expires_at))
+  const [mainImageLoaded, setMainImageLoaded] = useState(false)
+  const bundleLoadedRef = useRef<Set<number>>(new Set())
+  const [bundleAllLoaded, setBundleAllLoaded] = useState(nBundleTiles === 0)
+  const mainImgRef = useRef<HTMLImageElement>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [homeModalOpen, setHomeModalOpen] = useState(false)
+
+  useEffect(() => {
+    bundleLoadedRef.current = new Set()
+    setBundleAllLoaded(nBundleTiles === 0)
+  }, [bundleKey, nBundleTiles])
+
+  useLayoutEffect(() => {
+    if (showBundleGrid || !mainImage) return
+    setMainImageLoaded(false)
+    const el = mainImgRef.current
+    if (el?.complete && el.naturalHeight > 0) {
+      setMainImageLoaded(true)
+    }
+  }, [mainImage, showBundleGrid])
+
+  const markBundleTileDone = (index: number) => {
+    if (nBundleTiles === 0) return
+    bundleLoadedRef.current.add(index)
+    if (bundleLoadedRef.current.size >= nBundleTiles) {
+      setBundleAllLoaded(true)
+    }
+  }
+
+  const needsImageReveal = showBundleGrid || Boolean(mainImage)
+  const imagesReady = showBundleGrid ? bundleAllLoaded : mainImage ? mainImageLoaded : true
 
   useEffect(() => {
     if (!product.timed_expires_at) return
@@ -61,31 +94,56 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
 
   const imageArea = (
     <>
-      {isBundle && bundleImages.length > 1 ? (
+      {showBundleGrid ? (
         <div className="product-image-bundle grid grid-cols-2 gap-1 w-full h-full p-1">
-          {bundleImages.slice(0, 4).map((url, i) => (
-            <SafeImage
+          {bundleDisplayUrls.map((url, i) => (
+            <div
               key={`${url}-${i}`}
-              src={url}
-              alt={i === 0 ? product.name : ''}
-              kind="product-square"
-              fill
-              sizes="(max-width: 640px) 50vw, 20vw"
-              className="bundle-cell aspect-square rounded-lg overflow-hidden bg-surface border border-border-default"
-              imgClassName="object-contain group-hover:scale-105 transition-transform duration-300"
-            />
+              className="bundle-cell aspect-square rounded-lg overflow-hidden bg-white border border-gray-100 flex items-center justify-center"
+            >
+              <img
+                src={url}
+                alt={i === 0 ? product.name : ''}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                onLoad={() => markBundleTileDone(i)}
+                onError={(e) => {
+                  ;(e.target as HTMLImageElement).src = '/images/products/default.svg'
+                  markBundleTileDone(i)
+                }}
+              />
+            </div>
           ))}
         </div>
+      ) : mainImage ? (
+        <>
+          {!mainImageLoaded && (
+            <div className="absolute inset-0 bg-gray-200 animate-pulse z-[1]" />
+          )}
+          <img
+            ref={mainImgRef}
+            src={mainImage}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            className={`w-full h-full object-contain group-hover:scale-[1.02] transition-opacity duration-300 ${mainImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setMainImageLoaded(true)}
+            onError={(e) => {
+              const el = e.target as HTMLImageElement
+              el.src = '/images/products/default.svg'
+              setMainImageLoaded(true)
+            }}
+          />
+        </>
       ) : (
-        <SafeImage
-          src={mainImage}
-          alt={product.name}
-          kind="product-square"
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="absolute inset-0"
-          imgClassName="object-contain group-hover:scale-[1.02] transition-transform duration-300"
-        />
+        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+          {isVintage ? (
+            <Clock className="w-12 h-12 text-vintage-primary/30" />
+          ) : (
+            <Sparkles className="w-12 h-12 text-modern-primary/30" />
+          )}
+        </div>
       )}
     </>
   )
@@ -105,13 +163,16 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
   return (
     <div className="h-full" data-cy="product-card">
       <div
-        className={`${isVintage ? 'product-card-vintage' : 'product-card-modern'} group relative h-full flex flex-col ${
+        className={`${isVintage ? 'product-card-vintage' : 'product-card-modern'} group relative h-full flex flex-col transition-[opacity,transform,box-shadow] duration-300 ${
+          needsImageReveal && !imagesReady ? 'opacity-0 pointer-events-none select-none' : 'opacity-100'
+        } ${
           homeQuickView
-            ? `transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl rounded-lg ${
+            ? `hover:-translate-y-1 hover:shadow-2xl rounded-lg ${
                 isVintage ? 'hover:ring-2 hover:ring-vintage-primary/20' : 'hover:ring-2 hover:ring-modern-primary/20'
               }`
             : ''
         }`}
+        aria-busy={needsImageReveal && !imagesReady ? true : undefined}
       >
         <div className="relative overflow-hidden aspect-square bg-gray-50">
           <Link href={`/products/${product.slug}`} className="absolute inset-0 z-0 block" prefetch={false}>

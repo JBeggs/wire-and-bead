@@ -61,9 +61,13 @@ export default function SafeImage({
     ? { aspectRatio: PLACEHOLDER_ASPECT[kind] ?? '1 / 1' }
     : undefined
 
+  const wrapperPositionClass = fill
+    ? 'absolute inset-0 overflow-hidden'
+    : 'relative overflow-hidden'
+
   return (
     <div
-      className={['relative overflow-hidden', className ?? ''].join(' ')}
+      className={[wrapperPositionClass, className ?? ''].join(' ')}
       style={aspectStyle}
     >
       {showPlaceholder ? (
