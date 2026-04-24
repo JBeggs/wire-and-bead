@@ -40,7 +40,7 @@ export default function PageHeroEditor({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [title, setTitle] = useState(hero?.title ?? '')
   const [subtitle, setSubtitle] = useState(hero?.subtitle ?? '')
-  const [enabled, setEnabled] = useState(hero?.enabled ?? false)
+  const [enabled, setEnabled] = useState(hero?.enabled ?? true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -48,6 +48,7 @@ export default function PageHeroEditor({
   const currentImageUrl = previewUrl ?? hero?.imageUrl ?? null
   const hasExisting = Boolean(hero?.id)
   const mustUploadBeforeEnable = enabled && !currentImageUrl && !file
+  const isLive = Boolean(hero?.enabled && hero?.imageUrl)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0] ?? null
@@ -55,6 +56,7 @@ export default function PageHeroEditor({
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     if (picked) {
       setPreviewUrl(URL.createObjectURL(picked))
+      setEnabled(true)
     } else {
       setPreviewUrl(null)
     }
@@ -142,7 +144,7 @@ export default function PageHeroEditor({
     <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
       <header className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-xl font-bold text-text">{page.label}</h2>
             <Link
               href={page.path}
@@ -153,6 +155,17 @@ export default function PageHeroEditor({
             >
               <ExternalLink className="w-4 h-4" />
             </Link>
+            <span
+              className={
+                'text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ' +
+                (isLive
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-500')
+              }
+              title={isLive ? 'Currently shown on the storefront' : 'Not shown on the storefront'}
+            >
+              {isLive ? 'LIVE' : 'HIDDEN'}
+            </span>
           </div>
           {page.description && (
             <p className="text-sm text-text-muted mt-1">{page.description}</p>
@@ -166,7 +179,7 @@ export default function PageHeroEditor({
             className="h-4 w-4"
           />
           <span className="text-sm font-bold uppercase tracking-wider text-text">
-            {enabled ? 'Enabled' : 'Disabled'}
+            Show on {page.label}
           </span>
         </label>
       </header>
