@@ -8,13 +8,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { Cart, CartItem, SupplierDeliveryBreakdownItem, type GumtreeFulfillmentMethod } from '@/lib/types'
 import { ArrowLeft, CreditCard, Truck, Shield, Lock, MapPin, Package } from 'lucide-react'
-import { getCartItemImages, normalizeCartResponse } from '@/lib/cart-utils'
+import { getCartItemImages, isCourierGuyCartItem, normalizeCartResponse } from '@/lib/cart-utils'
 import { getProductBundleImages } from '@/lib/image-utils'
 import { PudoLocationSelector, type PudoLocation } from '@/components/checkout/PudoLocationSelector'
 
 type DeliveryMethod = 'standard' | 'express' | 'pudo'
 
-const COURIER_GUY_SLUGS = new Set(['temu', 'aliexpress', 'ubuy', 'gumtree'])
 const OTHER_COURIER_SLUGS = new Set(['temu', 'aliexpress', 'ubuy']) // Courier Guy but not Gumtree
 const GUMTREE_DELIVERY_BLOCK_MESSAGE = 'Item cannot be delivered. Please contact support.'
 const PROVINCES = [
@@ -124,7 +123,8 @@ export default function CheckoutPage() {
       const items = Array.isArray(cartData?.items) ? cartData.items : []
       const getSupplierSlug = (item: any) =>
         String(item?.supplier_slug ?? item?.supplierSlug ?? '').trim().toLowerCase()
-      const hasCg = items.some((item: any) => COURIER_GUY_SLUGS.has(getSupplierSlug(item)))
+      // Courier Guy handles imports + gumtree + first-party (blank slug) catalog.
+      const hasCg = items.some((item: CartItem) => isCourierGuyCartItem(item))
       const hasGumtree = items.some((item: any) => getSupplierSlug(item) === 'gumtree')
       const hasOther = items.some((item: any) => OTHER_COURIER_SLUGS.has(getSupplierSlug(item)))
       const gumtreeBlocked = items.some((item: any) =>

@@ -5,6 +5,21 @@ import { ensureAbsoluteImageUrl, MAX_BUNDLE_PRODUCT_IMAGES } from './image-utils
 export const COURIER_GUY_SLUGS = new Set(['temu', 'aliexpress', 'ubuy', 'gumtree'])
 export const OTHER_GROUP = '__other__'
 
+function normalizeSupplierSlug(item: CartItem): string {
+  return String(item.supplier_slug ?? item.supplierSlug ?? '').trim().toLowerCase()
+}
+
+/**
+ * Return true if the cart item ships via Courier Guy. Imports (temu/aliexpress/ubuy)
+ * and gumtree always qualify; first-party storefront items (blank supplier_slug)
+ * also qualify — priced from the company address using product weight/dimensions.
+ * Mirrors `uses_courier_guy_or_first_party` in django-crm/ecommerce/constants.py.
+ */
+export function isCourierGuyCartItem(item: CartItem): boolean {
+  const slug = normalizeSupplierSlug(item)
+  return slug === '' || COURIER_GUY_SLUGS.has(slug)
+}
+
 export function normalizeCartResponse(response: any): Cart | null {
   if (!response) return null
   if (response?.results && Array.isArray(response.results)) return response.results[0] ?? null
