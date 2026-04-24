@@ -49,13 +49,29 @@ function ShelfChipIcon({ name }: { name?: string }) {
 
 type StorefrontCategory = { id: string; name: string; slug: string }
 
+/** URL slug when API omits slug (Category.slug may be null/blank in DB). */
+function storefrontCategorySlugFromName(name: string): string {
+  const s = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return s || 'category'
+}
+
 async function getStorefrontCategories(): Promise<StorefrontCategory[]> {
   try {
     const res = await serverEcommerceApi.categories.list()
     const rows = unwrapEcommerceList<{ id: string; name: string; slug?: string | null }>(res)
     return rows
-      .filter((c) => c.slug && c.name)
-      .map((c) => ({ id: String(c.id), name: c.name, slug: String(c.slug) }))
+      .filter((c) => Boolean(c.name?.trim()))
+      .map((c) => {
+        const raw = c.slug != null ? String(c.slug).trim() : ''
+        const slug = raw || storefrontCategorySlugFromName(c.name)
+        return { id: String(c.id), name: c.name, slug }
+      })
       .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
   } catch (error) {
     console.error('Error fetching storefront categories:', error)

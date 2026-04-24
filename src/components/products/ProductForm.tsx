@@ -75,7 +75,7 @@ export default function ProductForm({ product, onClose, onSuccess, inline = fals
   const fetchCategories = useCallback(async () => {
     try {
       setFetchingCategories(true)
-      const data = await ecommerceApi.categories.list()
+      const data = await ecommerceApi.categories.listForAdmin()
       setCategories(unwrapEcommerceList<Category>(data))
     } catch (error) {
       console.error('Error fetching categories:', error)

@@ -670,6 +670,8 @@ export const ecommerceApi = {
 
   categories: {
     list: () => apiClient.get(`/v1/public/${DEFAULT_COMPANY_SLUG}/categories/`),
+    /** Authenticated list — same company scope as create/update (avoid relying on public list for admin UI). */
+    listForAdmin: (params?: { page?: number }) => apiClient.get('/v1/categories/', params),
     get: (id: string) => apiClient.get(`/v1/categories/${id}/`),
     create: (data: Record<string, unknown>) => apiClient.post('/v1/categories/', data),
     update: (id: string, data: Record<string, unknown>) => apiClient.put(`/v1/categories/${id}/`, data),
