@@ -1,21 +1,41 @@
 import Link from 'next/link'
+import { ShoppingBag } from 'lucide-react'
 import SafeImage from '@/components/media/SafeImage'
 import type { PageHero } from '@/lib/page-hero'
+import type { Company } from '@/lib/company-shared'
+
+/** Matches `DefaultHomeHero` / CMS hero so layout does not jump when an image is uploaded. */
+const HERO_SECTION_LAYOUT =
+  'relative overflow-hidden flex flex-col justify-center min-h-[24rem] sm:min-h-[28rem] md:min-h-[32rem]'
 
 /**
  * Renders the uploaded hero markup for a page. Mirrors the home-page hero
  * styling (full-bleed image + gradient overlay + left-aligned text block) so
  * the admin-uploaded hero drops in seamlessly wherever <PageHero/> is used.
  *
- * `cta_label` / `cta_href` are read from the model but ship unused in the v1
- * editor; they render as a secondary CTA when both are present for forward
- * compatibility.
+ * **Home (`pageSlug === 'home'`):** Always shows the same primary + secondary
+ * CTAs as `DefaultHomeHero` (Shop + Our Story). Optional CMS `cta_label` /
+ * `cta_href` renders as an extra control when both are set.
  */
-export default function PageHeroView({ hero }: { hero: PageHero }) {
+export default function PageHeroView({
+  hero,
+  pageSlug,
+  company,
+}: {
+  hero: PageHero
+  pageSlug: string
+  company?: Company
+}) {
+  const isHome = pageSlug === 'home'
   const hasCta = Boolean(hero.ctaLabel && hero.ctaHref)
 
+  const heading =
+    (isHome && (hero.title?.trim() || company?.name)) ||
+    (!isHome && hero.title?.trim()) ||
+    null
+
   return (
-    <section className="relative overflow-hidden">
+    <section className={HERO_SECTION_LAYOUT}>
       <div className="absolute inset-0">
         <SafeImage
           src={hero.imageUrl}
@@ -37,24 +57,53 @@ export default function PageHeroView({ hero }: { hero: PageHero }) {
         />
       </div>
 
-      <div className="relative container-wide py-24 md:py-32 text-[rgb(var(--color-text-inverse))]">
+      <div className="relative container-wide py-24 md:py-32 text-[rgb(var(--color-text-inverse))] w-full">
         <div className="max-w-2xl">
-          {hero.title && (
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading mb-4">
-              {hero.title}
-            </h1>
+          {heading && (
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading mb-4">{heading}</h1>
           )}
-          {hero.subtitle && (
-            <p className="text-lg md:text-xl opacity-95 mb-8 max-w-xl">
-              {hero.subtitle}
-            </p>
+
+          {isHome && company ? (
+            hero.subtitle?.trim() ? (
+              <p className="text-lg md:text-xl opacity-95 mb-8 max-w-xl">{hero.subtitle}</p>
+            ) : (
+              <>
+                {company.tagline && (
+                  <p className="text-base md:text-lg uppercase tracking-[0.25em] opacity-90 mb-6">
+                    {company.tagline}
+                  </p>
+                )}
+                {company.description && (
+                  <p className="text-lg md:text-xl opacity-95 mb-8 max-w-xl">{company.description}</p>
+                )}
+              </>
+            )
+          ) : (
+            hero.subtitle?.trim() && (
+              <p className="text-lg md:text-xl opacity-95 mb-8 max-w-xl">{hero.subtitle}</p>
+            )
           )}
-          {hasCta && (
+
+          {isHome && (
             <div className="flex flex-wrap gap-4">
-              <Link
-                href={hero.ctaHref}
-                className="btn btn-accent text-base px-6 py-3"
-              >
+              {hasCta && (
+                <Link href={hero.ctaHref!} className="btn btn-secondary text-base px-6 py-3">
+                  {hero.ctaLabel}
+                </Link>
+              )}
+              <Link href="/products" className="btn btn-accent text-base px-6 py-3">
+                <ShoppingBag className="w-5 h-5 mr-2" />
+                Shop the Collection
+              </Link>
+              <Link href="/about" className="btn btn-secondary text-base px-6 py-3">
+                Our Story
+              </Link>
+            </div>
+          )}
+
+          {!isHome && hasCta && (
+            <div className="flex flex-wrap gap-4">
+              <Link href={hero.ctaHref!} className="btn btn-accent text-base px-6 py-3">
                 {hero.ctaLabel}
               </Link>
             </div>

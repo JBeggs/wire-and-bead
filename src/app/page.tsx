@@ -34,9 +34,12 @@ async function getFeaturedProducts(): Promise<Product[]> {
   }
 }
 
+const HOME_HERO_SECTION_LAYOUT =
+  'relative overflow-hidden flex flex-col justify-center min-h-[24rem] sm:min-h-[28rem] md:min-h-[32rem]'
+
 function DefaultHomeHero({ company }: { company: Company }) {
   return (
-    <section className="relative overflow-hidden">
+    <section className={HOME_HERO_SECTION_LAYOUT}>
       <div className="absolute inset-0">
         <SafeImage
           src={company.heroImageUrl}
@@ -58,7 +61,7 @@ function DefaultHomeHero({ company }: { company: Company }) {
         />
       </div>
 
-      <div className="relative container-wide py-24 md:py-32 text-[rgb(var(--color-text-inverse))]">
+      <div className="relative container-wide py-24 md:py-32 text-[rgb(var(--color-text-inverse))] w-full">
         <div className="max-w-2xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading mb-4">
             {company.name}

@@ -2,6 +2,7 @@ import 'server-only'
 import type { ReactNode } from 'react'
 import { getPageHero } from '@/lib/page-hero'
 import PageHeroView from './PageHeroView'
+import { getCompany } from '@/lib/company'
 
 /**
  * Server component that renders an uploaded hero for `pageSlug` when the admin
@@ -18,5 +19,6 @@ export default async function PageHero({
 }) {
   const hero = await getPageHero(pageSlug)
   if (!hero?.enabled || !hero.imageUrl) return <>{fallback}</>
-  return <PageHeroView hero={hero} />
+  const company = pageSlug === 'home' ? await getCompany() : undefined
+  return <PageHeroView hero={hero} pageSlug={pageSlug} company={company} />
 }
