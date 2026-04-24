@@ -588,6 +588,22 @@ export const newsApi = {
     upload: (file: File, data?: any) => apiClient.uploadFile('/news/media/', file, data),
   },
 
+  pageHeroes: {
+    list: () => apiClient.get('/news/page-heroes/'),
+    listForPage: (pageSlug: string) =>
+      apiClient.get(`/news/page-heroes/?page_slug=${encodeURIComponent(pageSlug)}`),
+    create: (data: {
+      page_slug: string
+      image_id?: string | null
+      title?: string
+      subtitle?: string
+      enabled?: boolean
+    }) => apiClient.post('/news/page-heroes/', data),
+    update: (id: string, data: Record<string, unknown>) =>
+      apiClient.patch(`/news/page-heroes/${id}/`, data),
+    delete: (id: string) => apiClient.delete(`/news/page-heroes/${id}/`),
+  },
+
   siteSettings: {
     list: () => apiClient.get('/news/site-settings/'),
     get: (key: string) => apiClient.get(`/news/site-settings/?key=${key}`),

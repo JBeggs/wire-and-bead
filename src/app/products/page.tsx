@@ -31,6 +31,7 @@ import {
   paramsMatchShelf,
   type StorefrontShelf,
 } from '@/lib/storefront-shelves'
+import PageHero from '@/components/hero/PageHero'
 
 const SHELF_ICONS: Record<string, LucideIcon> = {
   star: Star,
@@ -297,6 +298,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return (
     <div className="min-h-screen bg-vintage-background" data-cy="products-section">
+      <PageHero pageSlug="products" fallback={null} />
       <AdminActions />
 
       <section className={`py-12 ${headerBg} text-white`}>

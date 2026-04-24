@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { serverNewsApi } from '@/lib/api-server'
 import { Article } from '@/lib/types'
 import { Calendar, User, ArrowRight, Search } from 'lucide-react'
+import PageHero from '@/components/hero/PageHero'
 
 interface ArticlesPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -58,6 +59,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
 
   return (
     <div className="min-h-screen bg-vintage-background">
+      <PageHero pageSlug="articles" fallback={null} />
       {/* Page Header */}
       <section className="py-12 bg-vintage-primary text-white">
         <div className="container-wide">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, User, LogOut, Package } from 'lucide-react'
+import { ShoppingCart, User, LogOut, Package, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCartSafe } from '@/contexts/CartContext'
 import { useMounted } from '@/hooks/useMounted'
@@ -63,14 +63,24 @@ export default function ClientHeader() {
       {user ? (
         <div className="flex items-center space-x-3" data-cy="header-user">
           {isAdmin && (
-            <Link
-              href="/admin/orders"
-              className="p-2 text-text hover:text-vintage-primary transition-colors"
-              aria-label="View orders"
-              title="Orders"
-            >
-              <Package className="w-5 h-5" />
-            </Link>
+            <>
+              <Link
+                href="/admin/orders"
+                className="p-2 text-text hover:text-vintage-primary transition-colors"
+                aria-label="View orders"
+                title="Orders"
+              >
+                <Package className="w-5 h-5" />
+              </Link>
+              <Link
+                href="/admin/branding"
+                className="p-2 text-text hover:text-vintage-primary transition-colors"
+                aria-label="Branding and heroes"
+                title="Branding & Heroes"
+              >
+                <ImageIcon className="w-5 h-5" />
+              </Link>
+            </>
           )}
           <Link
             href="/profile"
