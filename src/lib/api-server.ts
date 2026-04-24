@@ -187,12 +187,6 @@ export const serverNewsApi = {
   siteSettings: {
     list: () => serverApiClient.get('/news/site-settings/'),
   },
-
-  pageHeroes: {
-    list: () => serverApiClient.get('/news/page-heroes/'),
-    listForPage: (pageSlug: string) =>
-      serverApiClient.get(`/news/page-heroes/?page_slug=${encodeURIComponent(pageSlug)}`),
-  },
 }
 
 // Server-side Ecommerce API

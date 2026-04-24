@@ -596,33 +596,6 @@ export const newsApi = {
     delete: (id: string) => apiClient.delete(`/news/site-settings/${id}/`),
   },
 
-  pageHeroes: {
-    list: () => apiClient.get('/news/page-heroes/'),
-    listForPage: (pageSlug: string) =>
-      apiClient.get(`/news/page-heroes/?page_slug=${encodeURIComponent(pageSlug)}`),
-    create: (data: {
-      page_slug: string
-      enabled?: boolean
-      image_id?: string | null
-      title?: string
-      subtitle?: string
-      cta_label?: string
-      cta_href?: string
-    }) => apiClient.post('/news/page-heroes/', data),
-    update: (
-      id: string,
-      data: Partial<{
-        enabled: boolean
-        image_id: string | null
-        title: string
-        subtitle: string
-        cta_label: string
-        cta_href: string
-      }>,
-    ) => apiClient.patch(`/news/page-heroes/${id}/`, data),
-    delete: (id: string) => apiClient.delete(`/news/page-heroes/${id}/`),
-  },
-
   profile: {
     get: () => apiClient.get('/news/profiles/me/'),
     update: (data: any) => apiClient.put('/news/profiles/me/', data),

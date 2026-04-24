@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, User, LogOut, Package, ImageIcon } from 'lucide-react'
+import { ShoppingCart, User, LogOut, Package } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCartSafe } from '@/contexts/CartContext'
 import { useMounted } from '@/hooks/useMounted'
@@ -70,16 +70,6 @@ export default function ClientHeader() {
               title="Orders"
             >
               <Package className="w-5 h-5" />
-            </Link>
-          )}
-          {isAdmin && (
-            <Link
-              href="/admin/branding"
-              className="p-2 text-text hover:text-vintage-primary transition-colors"
-              aria-label="Branding and page heroes"
-              title="Branding & Heroes"
-            >
-              <ImageIcon className="w-5 h-5" />
             </Link>
           )}
           <Link

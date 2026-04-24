@@ -19,7 +19,6 @@ import ProductsSortSelect from '@/components/products/ProductsSortSelect'
 import AdminActions from '@/components/products/AdminActions'
 import ProductCard from '@/components/products/ProductCard'
 import PaginationNav from '@/components/ui/PaginationNav'
-import PageHero from '@/components/hero/PageHero'
 import {
   unwrapEcommerceList,
   unwrapEcommerceProductList,
@@ -299,9 +298,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   return (
     <div className="min-h-screen bg-vintage-background" data-cy="products-section">
       <AdminActions />
-
-      {/* Optional admin-uploaded hero; renders nothing when disabled. */}
-      <PageHero pageSlug="products" fallback={null} />
 
       <section className={`py-12 ${headerBg} text-white`}>
         <div className="container-wide">
