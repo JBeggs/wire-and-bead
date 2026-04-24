@@ -1,8 +1,7 @@
 'use client'
 
-import Image, { type ImageProps } from 'next/image'
-import { useState } from 'react'
-import { resolveMediaUrl, THEME_BLUR_DATA_URL, PLACEHOLDER_ASPECT } from '@/lib/media'
+import { useState, type ImgHTMLAttributes } from 'react'
+import { resolveMediaUrl, PLACEHOLDER_ASPECT } from '@/lib/media'
 import { Placeholder, type PlaceholderKind } from './placeholders'
 
 type MediaLike =
@@ -11,36 +10,33 @@ type MediaLike =
   | null
   | undefined
 
+/**
+ * SafeImage used to wrap `next/image`, but the Vercel image optimizer cannot
+ * reliably proxy media from the Django backend (PythonAnywhere free tier
+ * frequently 504s through `/_next/image`). The product detail page has always
+ * rendered a plain `<img>` and works correctly, so we mirror that here.
+ *
+ * Public API kept compatible: callers can still pass `priority`, `quality`,
+ * `sizes`, `fill` etc. They're accepted and ignored (or translated to the
+ * native equivalent where applicable).
+ */
 interface SafeImageProps
-  extends Omit<ImageProps, 'src' | 'alt' | 'placeholder' | 'blurDataURL'> {
-  /** Any media reference (string URL, object, null). Falls back to placeholder. */
+  extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt' | 'placeholder'> {
   src?: MediaLike
-  /** Alt text. Pass an empty string for purely decorative images. */
   alt: string
-  /** Which placeholder to render when `src` is missing or fails to load. */
   kind: PlaceholderKind
-  /** Display monogram used by the logo placeholder. */
   monogram?: string
-  /**
-   * Enforce the locked aspect ratio for the kind. Disable when the parent
-   * already constrains the element (e.g. an `aspect-square` card slot).
-   */
   enforceAspect?: boolean
   className?: string
-  /** Extra classes applied directly to the underlying `<Image>`. */
   imgClassName?: string
+  /** Ignored — kept for API parity with the old next/image-based SafeImage. */
+  fill?: boolean
+  /** Ignored — kept for API parity. */
+  priority?: boolean
+  /** Ignored — kept for API parity. */
+  quality?: number
 }
 
-/**
- * Wrapper around `next/image` that:
- *   - resolves mixed media shapes to absolute URLs,
- *   - renders a theme-aware placeholder when no usable src is provided,
- *   - falls back to the same placeholder on load errors,
- *   - applies a subtle blur-up transition without a layout shift.
- *
- * Use `fill` for grid/card slots where the parent controls the box; use
- * explicit `width`/`height` for fixed placements like the header logo.
- */
 export default function SafeImage({
   src,
   alt,
@@ -50,9 +46,11 @@ export default function SafeImage({
   className,
   imgClassName,
   fill,
-  sizes,
-  priority,
-  quality,
+  priority: _priority,
+  quality: _quality,
+  sizes: _sizes,
+  loading,
+  decoding,
   ...imgProps
 }: SafeImageProps) {
   const resolved = resolveMediaUrl(src)
@@ -71,17 +69,17 @@ export default function SafeImage({
       {showPlaceholder ? (
         <Placeholder kind={kind} label={alt || undefined} monogram={monogram} />
       ) : (
-        <Image
+        <img
           src={resolved!}
           alt={alt}
           onError={() => setFailed(true)}
-          placeholder="blur"
-          blurDataURL={THEME_BLUR_DATA_URL}
-          fill={fill}
-          sizes={sizes ?? (fill ? '(max-width: 768px) 100vw, 50vw' : undefined)}
-          priority={priority}
-          quality={quality}
-          className={['object-cover', imgClassName ?? ''].join(' ')}
+          loading={loading ?? 'lazy'}
+          decoding={decoding ?? 'async'}
+          className={[
+            fill ? 'absolute inset-0 h-full w-full' : 'h-full w-full',
+            'object-cover',
+            imgClassName ?? '',
+          ].join(' ')}
           {...imgProps}
         />
       )}
