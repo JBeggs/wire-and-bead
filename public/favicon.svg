@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Wire and bead">
+  <rect width="32" height="32" rx="7" fill="#2a1810"/>
+  <!-- Wire arc -->
+  <path
+    d="M7 20.5c2.2-6.5 7.8-10.5 14-8.5 2.8.8 5 2.6 6.2 5"
+    fill="none"
+    stroke="#c9a06c"
+    stroke-width="2.25"
+    stroke-linecap="round"
+  />
+  <!-- Bead -->
+  <circle cx="22" cy="11.5" r="5" fill="#b87333" stroke="#e8d4bc" stroke-width="1.1"/>
+  <circle cx="20.5" cy="10" r="1.35" fill="#f5ede3" opacity="0.45"/>
+</svg>

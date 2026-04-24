@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Wire and bead">
+  <rect width="512" height="512" rx="112" fill="#2a1810"/>
+  <path
+    d="M112 328c35.2-104 124.8-168 224-136 44.8 12.8 80 41.6 99.2 80"
+    fill="none"
+    stroke="#c9a06c"
+    stroke-width="36"
+    stroke-linecap="round"
+  />
+  <circle cx="352" cy="184" r="80" fill="#b87333" stroke="#e8d4bc" stroke-width="17.6"/>
+  <circle cx="328" cy="160" r="21.6" fill="#f5ede3" opacity="0.45"/>
+</svg>

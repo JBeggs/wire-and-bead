@@ -22,6 +22,46 @@ interface ProductCardProps {
   homeQuickView?: boolean
 }
 
+function BundleTileGrid({
+  urls,
+  productName,
+  onAllLoaded,
+}: {
+  urls: string[]
+  productName: string
+  onAllLoaded: () => void
+}) {
+  const loadedRef = useRef<Set<number>>(new Set())
+  const n = urls.length
+  const markTile = (index: number) => {
+    loadedRef.current.add(index)
+    if (loadedRef.current.size >= n) onAllLoaded()
+  }
+  return (
+    <div className="product-image-bundle grid grid-cols-2 gap-1 w-full h-full p-1">
+      {urls.map((url, i) => (
+        <div
+          key={`${url}-${i}`}
+          className="bundle-cell aspect-square rounded-lg overflow-hidden bg-white border border-gray-100 flex items-center justify-center"
+        >
+          <img
+            src={url}
+            alt={i === 0 ? productName : ''}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+            onLoad={() => markTile(i)}
+            onError={(e) => {
+              ;(e.target as HTMLImageElement).src = '/images/products/default.svg'
+              markTile(i)
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function ProductCard({ product, homeQuickView = false }: ProductCardProps) {
   const { profile } = useAuth()
   const { showSuccess, showError } = useToast()
@@ -40,33 +80,31 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
 
   const [countdown, setCountdown] = useState(() => formatCountdown(product.timed_expires_at))
   const [mainImageLoaded, setMainImageLoaded] = useState(false)
-  const bundleLoadedRef = useRef<Set<number>>(new Set())
   const [bundleAllLoaded, setBundleAllLoaded] = useState(nBundleTiles === 0)
+  const [prevBundleKey, setPrevBundleKey] = useState(bundleKey)
+  if (bundleKey !== prevBundleKey) {
+    setPrevBundleKey(bundleKey)
+    setBundleAllLoaded(nBundleTiles === 0)
+  }
   const mainImgRef = useRef<HTMLImageElement>(null)
+  const mainImageEpoch = `${mainImage ?? ''}|${showBundleGrid}`
+  const [prevMainImageEpoch, setPrevMainImageEpoch] = useState(mainImageEpoch)
+  if (mainImageEpoch !== prevMainImageEpoch) {
+    setPrevMainImageEpoch(mainImageEpoch)
+    setMainImageLoaded(false)
+  }
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [homeModalOpen, setHomeModalOpen] = useState(false)
 
-  useEffect(() => {
-    bundleLoadedRef.current = new Set()
-    setBundleAllLoaded(nBundleTiles === 0)
-  }, [bundleKey, nBundleTiles])
-
   useLayoutEffect(() => {
     if (showBundleGrid || !mainImage) return
-    setMainImageLoaded(false)
     const el = mainImgRef.current
     if (el?.complete && el.naturalHeight > 0) {
-      setMainImageLoaded(true)
+      queueMicrotask(() => {
+        setMainImageLoaded(true)
+      })
     }
   }, [mainImage, showBundleGrid])
-
-  const markBundleTileDone = (index: number) => {
-    if (nBundleTiles === 0) return
-    bundleLoadedRef.current.add(index)
-    if (bundleLoadedRef.current.size >= nBundleTiles) {
-      setBundleAllLoaded(true)
-    }
-  }
 
   const needsImageReveal = showBundleGrid || Boolean(mainImage)
   const imagesReady = showBundleGrid ? bundleAllLoaded : mainImage ? mainImageLoaded : true
@@ -95,27 +133,12 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
   const imageArea = (
     <>
       {showBundleGrid ? (
-        <div className="product-image-bundle grid grid-cols-2 gap-1 w-full h-full p-1">
-          {bundleDisplayUrls.map((url, i) => (
-            <div
-              key={`${url}-${i}`}
-              className="bundle-cell aspect-square rounded-lg overflow-hidden bg-white border border-gray-100 flex items-center justify-center"
-            >
-              <img
-                src={url}
-                alt={i === 0 ? product.name : ''}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                onLoad={() => markBundleTileDone(i)}
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).src = '/images/products/default.svg'
-                  markBundleTileDone(i)
-                }}
-              />
-            </div>
-          ))}
-        </div>
+        <BundleTileGrid
+          key={bundleKey}
+          urls={bundleDisplayUrls}
+          productName={product.name}
+          onAllLoaded={() => setBundleAllLoaded(true)}
+        />
       ) : mainImage ? (
         <>
           {!mainImageLoaded && (
