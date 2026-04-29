@@ -103,6 +103,7 @@ export default function ProfilePage() {
   })
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [removingLogo, setRemovingLogo] = useState(false)
   type TabId = 'personal' | 'orders' | 'business' | 'site' | 'integrations'
   const [activeTab, setActiveTab] = useState<TabId>('personal')
 
@@ -413,6 +414,28 @@ export default function ProfilePage() {
     }
   }
 
+  const handleLogoRemove = async () => {
+    if (!companyId || !companyForm.logo) return
+    if (
+      !window.confirm(
+        'Remove the company logo? Header and footer will show the gradient monogram instead.',
+      )
+    ) {
+      return
+    }
+    setRemovingLogo(true)
+    try {
+      await ecommerceApi.companies.update(companyId, { logo_id: null })
+      setCompanyForm((f) => ({ ...f, logo: '' }))
+      setCompany((c) => (c ? { ...c, logo: null, logo_url: '' } : null))
+      showSuccess('Logo removed')
+    } catch (error: any) {
+      showError(error.message || 'Failed to remove logo')
+    } finally {
+      setRemovingLogo(false)
+    }
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-vintage-background flex items-center justify-center">
@@ -690,14 +713,24 @@ export default function ProfilePage() {
               <form onSubmit={handleUpdateCompany} className="space-y-4">
                       <div className="space-y-1">
                         <label className="text-xs font-bold uppercase tracking-widest text-text-muted">Company Logo</label>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4">
                           {companyForm.logo && (
                             <img src={companyForm.logo} alt="Logo" className="w-16 h-16 rounded object-contain border border-gray-200" />
                           )}
                           <label className="btn btn-secondary cursor-pointer flex items-center gap-2">
                             {uploadingLogo ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Upload'}
-                            <input type="file" accept="image/*" className="sr-only" onChange={handleLogoUpload} disabled={uploadingLogo} />
+                            <input type="file" accept="image/*" className="sr-only" onChange={handleLogoUpload} disabled={uploadingLogo || removingLogo} />
                           </label>
+                          {companyForm.logo && (
+                            <button
+                              type="button"
+                              onClick={handleLogoRemove}
+                              disabled={uploadingLogo || removingLogo}
+                              className="text-sm text-text-muted hover:text-red-600 transition-colors disabled:opacity-50"
+                            >
+                              {removingLogo ? 'Removing…' : 'Remove logo'}
+                            </button>
+                          )}
                         </div>
                         <p className="text-xs text-text-muted mt-1">Click to upload an image</p>
                       </div>

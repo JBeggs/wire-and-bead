@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { cookies } from 'next/headers'
 import { Cormorant_Garamond, Inter, Nunito, Playfair_Display } from 'next/font/google'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -21,6 +21,17 @@ import { resolveLocale } from '@/lib/locale'
 
 // Header/Footer/metadata all read cookies or live company data.
 export const dynamic = 'force-dynamic'
+
+/** Default Artisan theme surfaces — address bar tint on iOS / Android Chrome */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FAF6F0' },
+    { media: '(prefers-color-scheme: dark)', color: '#2C1810' },
+  ],
+}
 
 function resolveMetadataBase(): URL | undefined {
   const site = (process.env.NEXT_PUBLIC_SITE_URL || '').trim()
@@ -122,6 +133,7 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
     >
       <head>
+        <meta name="format-detection" content="telephone=no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* No-flash theme bootstrap: runs synchronously before first paint. */}

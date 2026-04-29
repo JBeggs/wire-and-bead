@@ -2,10 +2,24 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, User, LogOut, Package, Image as ImageIcon } from 'lucide-react'
+import {
+  ShoppingCart,
+  User,
+  LogOut,
+  Package,
+  Image as ImageIcon,
+  Boxes,
+  Settings,
+} from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCartSafe } from '@/contexts/CartContext'
 import { useMounted } from '@/hooks/useMounted'
+
+const ICON_HIT =
+  'relative min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-text hover:text-vintage-primary transition-colors'
+
+const SIGN_OUT_HIT =
+  'relative min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-text hover:text-red-600 transition-colors'
 
 export default function ClientHeader() {
   const [countBump, setCountBump] = useState(false)
@@ -49,12 +63,14 @@ export default function ClientHeader() {
       <Link
         href="/cart"
         data-cy="header-cart"
-        className="p-2 text-text hover:text-vintage-primary transition-colors relative group"
+        className={`${ICON_HIT} group`}
         aria-label="Shopping cart"
       >
-        <ShoppingCart className="w-5 h-5" />
+        <ShoppingCart className="w-5 h-5 shrink-0" />
         {itemCount > 0 && (
-          <span className={`absolute -top-1 -right-1 bg-vintage-accent text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shadow-sm group-hover:scale-110 transition-transform ${countBump ? 'animate-cart-bump' : ''}`}>
+          <span
+            className={`absolute -top-1 -right-1 bg-vintage-accent text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shadow-sm group-hover:scale-110 transition-transform ${countBump ? 'animate-cart-bump' : ''}`}
+          >
             {itemCount}
           </span>
         )}
@@ -65,36 +81,44 @@ export default function ClientHeader() {
           {isAdmin && (
             <>
               <Link
-                href="/admin/orders"
-                className="p-2 text-text hover:text-vintage-primary transition-colors"
-                aria-label="View orders"
-                title="Orders"
+                href="/admin/inventory"
+                className={ICON_HIT}
+                aria-label="Inventory"
+                title="Inventory"
               >
-                <Package className="w-5 h-5" />
+                <Boxes className="w-5 h-5 shrink-0" />
+              </Link>
+              <Link href="/admin/orders" className={ICON_HIT} aria-label="View orders" title="Orders">
+                <Package className="w-5 h-5 shrink-0" />
               </Link>
               <Link
                 href="/admin/branding"
-                className="p-2 text-text hover:text-vintage-primary transition-colors"
+                className={ICON_HIT}
                 aria-label="Branding and heroes"
                 title="Branding & Heroes"
               >
-                <ImageIcon className="w-5 h-5" />
+                <ImageIcon className="w-5 h-5 shrink-0" />
+              </Link>
+              <Link
+                href="/admin/setup"
+                className={ICON_HIT}
+                aria-label="Business setup and details"
+                title="Business details"
+              >
+                <Settings className="w-5 h-5 shrink-0" />
               </Link>
             </>
           )}
-          <Link
-            href="/profile"
-            className="p-2 text-text hover:text-vintage-primary transition-colors"
-            aria-label="Profile"
-          >
-            <User className="w-5 h-5" />
+          <Link href="/profile" className={ICON_HIT} aria-label="Profile">
+            <User className="w-5 h-5 shrink-0" />
           </Link>
           <button
+            type="button"
             onClick={() => signOut()}
-            className="p-2 text-text hover:text-red-600 transition-colors"
+            className={SIGN_OUT_HIT}
             aria-label="Sign out"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5 shrink-0" />
           </button>
         </div>
       ) : (
