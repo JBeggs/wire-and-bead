@@ -19,12 +19,12 @@ type TruckCoords = { startX: number; startY: number; endX: number; endY: number 
 const ICON_TAP =
   'relative min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-text hover:text-primary transition-colors'
 
-export function MobileNav({ menuItems }: MobileNavProps) {
+/** Inner: remounted when route changes (`key={pathname}` on parent) so menu closes without setState-in-effect. */
+function MobileNavInner({ menuItems }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [countBump, setCountBump] = useState(false)
   const [showTruck, setShowTruck] = useState(false)
   const [truckCoords, setTruckCoords] = useState<TruckCoords | null>(null)
-  const pathname = usePathname()
   const { user, profile } = useAuth()
   const isAdmin =
     profile?.role === 'admin' || profile?.role === 'business_owner'
@@ -72,10 +72,6 @@ export function MobileNav({ menuItems }: MobileNavProps) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [isOpen])
-
-  useEffect(() => {
-    setIsOpen(false)
-  }, [pathname])
 
   return (
     <div className="md:hidden">
@@ -213,4 +209,9 @@ export function MobileNav({ menuItems }: MobileNavProps) {
       )}
     </div>
   )
+}
+
+export function MobileNav({ menuItems }: MobileNavProps) {
+  const pathname = usePathname()
+  return <MobileNavInner key={pathname} menuItems={menuItems} />
 }
