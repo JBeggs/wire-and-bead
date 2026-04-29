@@ -34,6 +34,8 @@ module.exports = {
         },
         secondary: rgbVar('--color-secondary'),
         accent: rgbVar('--color-accent'),
+        danger: rgbVar('--color-danger'),
+        'on-accent': rgbVar('--color-on-accent'),
         'border-default': rgbVar('--color-border'),
         ring: rgbVar('--color-ring'),
 

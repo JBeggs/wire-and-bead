@@ -167,7 +167,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     )}
                   </div>
                   {hasDiscount && (
-                    <span className="bg-vintage-accent text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                    <span className="bg-vintage-accent text-on-accent px-3 py-1 rounded-full text-sm font-bold animate-pulse">
                       SAVE {discountPercent}%
                     </span>
                   )}

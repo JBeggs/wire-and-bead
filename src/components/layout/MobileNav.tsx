@@ -101,7 +101,7 @@ function MobileNavInner({ menuItems }: MobileNavProps) {
           <ShoppingCart className="w-8 h-8 shrink-0" aria-hidden />
           {itemCount > 0 && (
             <span
-              className={`absolute -top-0.5 -right-0.5 bg-accent text-[rgb(var(--color-text-inverse))] text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full shadow-sm transition-transform duration-300 ${
+              className={`absolute -top-0.5 -right-0.5 bg-accent text-on-accent text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full shadow-sm transition-transform duration-300 ${
                 countBump ? 'animate-cart-bump' : ''
               }`}
             >

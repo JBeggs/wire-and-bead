@@ -69,7 +69,7 @@ export default function ClientHeader() {
         <ShoppingCart className="w-5 h-5 shrink-0" />
         {itemCount > 0 && (
           <span
-            className={`absolute -top-1 -right-1 bg-vintage-accent text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shadow-sm group-hover:scale-110 transition-transform ${countBump ? 'animate-cart-bump' : ''}`}
+            className={`absolute -top-1 -right-1 bg-vintage-accent text-on-accent text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shadow-sm group-hover:scale-110 transition-transform ${countBump ? 'animate-cart-bump' : ''}`}
           >
             {itemCount}
           </span>

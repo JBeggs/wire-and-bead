@@ -241,7 +241,7 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
               </Link>
               <button
                 onClick={handleDelete}
-                className="bg-white p-2 rounded-full text-vintage-accent hover:bg-vintage-accent hover:text-white transition-all shadow-lg"
+                className="bg-white p-2 rounded-full text-vintage-accent hover:bg-vintage-accent hover:text-on-accent transition-all shadow-lg"
                 title="Delete Product"
               >
                 <Trash2 className="w-5 h-5" />

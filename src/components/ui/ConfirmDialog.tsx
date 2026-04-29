@@ -40,7 +40,7 @@ export default function ConfirmDialog({
             <button
               type="button"
               onClick={onConfirm}
-              className={danger ? 'btn btn-accent' : 'btn btn-primary'}
+              className={danger ? 'btn btn-danger' : 'btn btn-primary'}
             >
               {confirmLabel}
             </button>

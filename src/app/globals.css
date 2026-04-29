@@ -38,6 +38,11 @@ button,
   padding-top: max(0.5rem, env(safe-area-inset-top));
 }
 
+/* Shared semantic tokens — same hue on every theme swap */
+:root {
+  --color-danger: 185 28 28;
+}
+
 /* ============================================================
    Theme tokens
    ------------------------------------------------------------
@@ -66,6 +71,8 @@ button,
   --color-primary-hover: 139 84 33;
   --color-secondary: 139 105 20;
   --color-accent: 212 165 116;
+  /* Readable label on saturated accent fills (badges, .btn-accent) — not white-on-tan */
+  --color-on-accent: 44 24 16;
   --color-border: 232 221 201;
   --color-ring: 184 115 51;
 
@@ -88,6 +95,7 @@ button,
   --color-primary-hover: 10 10 10;
   --color-secondary: 212 175 55;
   --color-accent: 10 10 10;
+  --color-on-accent: 255 255 255;
   --color-border: 229 229 229;
   --color-ring: 26 26 26;
 
@@ -117,6 +125,7 @@ button,
   --color-primary-hover: 16 68 72;
   --color-secondary: 200 134 10;
   --color-accent: 123 45 139;
+  --color-on-accent: 255 253 247;
   --color-border: 232 217 184;
   --color-ring: 26 94 99;
 
@@ -206,6 +215,19 @@ h1, h2, h3, h4, h5, h6 {
 .btn-primary:hover { background-color: rgb(var(--color-primary-hover)); }
 .btn-primary:focus { --tw-ring-color: rgb(var(--color-ring)); }
 
+.btn-danger {
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  border-radius: var(--radius-button);
+  background-color: rgb(var(--color-danger));
+  color: rgb(var(--color-text-inverse));
+}
+.btn-danger:hover {
+  filter: brightness(1.06);
+}
+.btn-danger:focus {
+  --tw-ring-color: rgb(var(--color-danger) / 0.45);
+}
+
 .btn-secondary {
   background-color: rgb(var(--color-surface-raised));
   color: rgb(var(--color-text));
@@ -215,9 +237,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-accent {
   background-color: rgb(var(--color-accent));
-  color: rgb(var(--color-text-inverse));
+  color: rgb(var(--color-on-accent));
 }
-.btn-accent:hover { filter: brightness(0.92); }
+.btn-accent:hover {
+  filter: brightness(0.94);
+}
 
 .btn-modern {
   background-color: rgb(var(--color-secondary));
@@ -321,7 +345,10 @@ input:-webkit-autofill:active {
 }
 
 .form-label { @apply block text-sm font-medium text-text mb-1; }
-.form-error { color: rgb(var(--color-accent)); @apply text-sm mt-1; }
+.form-error {
+  color: rgb(var(--color-danger));
+  @apply text-sm mt-1;
+}
 
 /* Dividers */
 .divider { border-top: 1px solid rgb(var(--color-border)); }
