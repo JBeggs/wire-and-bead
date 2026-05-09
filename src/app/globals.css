@@ -271,23 +271,27 @@ h1, h2, h3, h4, h5, h6 {
 .product-image { @apply w-full h-48 object-cover; }
 .product-image-lg { @apply w-full h-64 md:h-80 object-cover; }
 
-/* Tags */
+/* Tags — opaque chips on product photos (no alpha tints) */
 .tag { @apply inline-block px-2 py-1 text-xs font-medium rounded-full; }
 .tag-vintage {
-  background-color: rgb(var(--color-primary) / 0.1);
+  background-color: rgb(var(--color-surface));
   color: rgb(var(--color-primary));
+  box-shadow: 0 0 0 1px rgb(var(--color-primary));
 }
 .tag-new {
-  background-color: rgb(var(--color-secondary) / 0.1);
+  background-color: rgb(var(--color-surface));
   color: rgb(var(--color-secondary));
+  box-shadow: 0 0 0 1px rgb(var(--color-secondary));
 }
 .tag-sale {
-  background-color: rgb(var(--color-accent) / 0.15);
+  background-color: rgb(var(--color-surface));
   color: rgb(var(--color-accent));
+  box-shadow: 0 0 0 1px rgb(var(--color-accent));
 }
 .tag-featured {
-  background-color: rgb(var(--color-accent) / 0.15);
+  background-color: rgb(var(--color-surface));
   color: rgb(var(--color-accent));
+  box-shadow: 0 0 0 1px rgb(var(--color-accent));
 }
 
 /* Price */
