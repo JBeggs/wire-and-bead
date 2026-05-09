@@ -1,14 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Wire and bead">
-  <rect width="32" height="32" rx="7" fill="#2a1810"/>
-  <!-- Wire arc -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="">
+  <rect width="32" height="32" fill="#2a1810" rx="6"/>
+  <!-- Wire arc sweeping across -->
   <path
-    d="M7 20.5c2.2-6.5 7.8-10.5 14-8.5 2.8.8 5 2.6 6.2 5"
+    d="M 6 22 C 8 10 14 8 16 16 C 18 24 24 22 26 10"
     fill="none"
-    stroke="#c9a06c"
-    stroke-width="2.25"
+    stroke="#b87333"
+    stroke-width="2"
     stroke-linecap="round"
   />
-  <!-- Bead -->
-  <circle cx="22" cy="11.5" r="5" fill="#b87333" stroke="#e8d4bc" stroke-width="1.1"/>
-  <circle cx="20.5" cy="10" r="1.35" fill="#f5ede3" opacity="0.45"/>
+  <!-- Central bead -->
+  <circle cx="16" cy="16" r="5" fill="#b87333"/>
+  <!-- Highlight on bead -->
+  <circle cx="14.2" cy="14.2" r="1.6" fill="#f5ede3" opacity="0.45"/>
+  <!-- Small beads on wire -->
+  <circle cx="9"  cy="20" r="2.2" fill="#c9a06c"/>
+  <circle cx="23" cy="12" r="2.2" fill="#c9a06c"/>
 </svg>

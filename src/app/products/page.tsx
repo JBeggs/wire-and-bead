@@ -362,7 +362,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     <Link
                       href={hrefForShelf(null, params.sort)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
-                        isAllShelves ? 'bg-vintage-primary text-white' : 'bg-gray-100 text-text hover:bg-gray-200'
+                        isAllShelves
+                          ? 'bg-vintage-primary text-white'
+                          : 'bg-surface-raised text-text border border-border-default hover:bg-accent-warm/12 hover:border-accent-warm/35'
                       }`}
                     >
                       All
@@ -374,7 +376,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                           key={shelf.id}
                           href={hrefForShelf(shelf, params.sort)}
                           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
-                            active ? 'bg-vintage-primary text-white' : 'bg-gray-100 text-text hover:bg-gray-200'
+                            active
+                              ? 'bg-vintage-primary text-white'
+                              : 'bg-surface-raised text-text border border-border-default hover:bg-accent-warm/12 hover:border-accent-warm/35'
                           }`}
                         >
                           <ShelfChipIcon name={shelf.icon} />
@@ -393,7 +397,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               )}
 
               {categories.length > 0 && (
-                <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-gray-200">
+                <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-border-default">
                   <div className="flex items-center gap-2 text-sm text-text-muted">
                     <Tag className="w-5 h-5 flex-shrink-0" aria-hidden />
                     <span>Shop by category</span>
@@ -418,7 +422,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                             delivery_group: null,
                           })}
                           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                            isCatActive ? 'bg-vintage-primary text-white' : 'bg-gray-100 text-text hover:bg-gray-200'
+                            isCatActive
+                              ? 'bg-vintage-primary text-white'
+                              : 'bg-surface-raised text-text border border-border-default hover:bg-accent-warm/12 hover:border-accent-warm/35'
                           }`}
                         >
                           {cat.name}

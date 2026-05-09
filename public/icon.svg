@@ -1,12 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Wire and bead">
-  <rect width="512" height="512" rx="112" fill="#2a1810"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="">
+  <rect width="512" height="512" fill="#2a1810" rx="112"/>
+  <!-- Wire sweeping arc -->
   <path
-    d="M112 328c35.2-104 124.8-168 224-136 44.8 12.8 80 41.6 99.2 80"
+    d="M 80 368 C 128 160 224 128 256 256 C 288 384 384 352 432 144"
     fill="none"
-    stroke="#c9a06c"
-    stroke-width="36"
+    stroke="#b87333"
+    stroke-width="32"
     stroke-linecap="round"
   />
-  <circle cx="352" cy="184" r="80" fill="#b87333" stroke="#e8d4bc" stroke-width="17.6"/>
-  <circle cx="328" cy="160" r="21.6" fill="#f5ede3" opacity="0.45"/>
+  <!-- Central faceted bead (gem) -->
+  <circle cx="256" cy="256" r="80" fill="#b87333"/>
+  <circle cx="256" cy="256" r="80" fill="none" stroke="#e8d4bc" stroke-width="8"/>
+  <!-- Gem facet lines -->
+  <line x1="256" y1="176" x2="256" y2="336" stroke="#2a1810" stroke-width="4" opacity="0.3"/>
+  <line x1="176" y1="256" x2="336" y2="256" stroke="#2a1810" stroke-width="4" opacity="0.3"/>
+  <line x1="199" y1="199" x2="313" y2="313" stroke="#2a1810" stroke-width="3" opacity="0.2"/>
+  <line x1="313" y1="199" x2="199" y2="313" stroke="#2a1810" stroke-width="3" opacity="0.2"/>
+  <!-- Highlight -->
+  <circle cx="224" cy="224" r="28" fill="#f5ede3" opacity="0.42"/>
+  <!-- Smaller accent beads -->
+  <circle cx="128" cy="340" r="30" fill="#c9a06c"/>
+  <circle cx="112" cy="324" r="8"  fill="#f5ede3" opacity="0.38"/>
+  <circle cx="384" cy="172" r="30" fill="#c9a06c"/>
+  <circle cx="368" cy="156" r="8"  fill="#f5ede3" opacity="0.38"/>
 </svg>

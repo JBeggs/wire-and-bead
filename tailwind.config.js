@@ -34,6 +34,7 @@ module.exports = {
         },
         secondary: rgbVar('--color-secondary'),
         accent: rgbVar('--color-accent'),
+        'accent-warm': rgbVar('--color-accent-warm'),
         danger: rgbVar('--color-danger'),
         'on-accent': rgbVar('--color-on-accent'),
         'border-default': rgbVar('--color-border'),
