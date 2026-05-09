@@ -56,6 +56,36 @@ export default function HomeProductQuickModal({ product, open, onClose }: HomePr
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
+  /** Lock document scroll while modal is open (fixed-body pattern works on iOS Safari). */
+  useEffect(() => {
+    if (!open) return
+    const body = document.body
+    const scrollY = window.scrollY
+    const prevOverflow = body.style.overflow
+    const prevPosition = body.style.position
+    const prevTop = body.style.top
+    const prevLeft = body.style.left
+    const prevRight = body.style.right
+    const prevWidth = body.style.width
+
+    body.style.overflow = 'hidden'
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.width = '100%'
+
+    return () => {
+      body.style.overflow = prevOverflow
+      body.style.position = prevPosition
+      body.style.top = prevTop
+      body.style.left = prevLeft
+      body.style.right = prevRight
+      body.style.width = prevWidth
+      window.scrollTo(0, scrollY)
+    }
+  }, [open])
+
   useEffect(() => {
     if (!product.timed_expires_at) {
       setCountdown('')
@@ -127,7 +157,7 @@ export default function HomeProductQuickModal({ product, open, onClose }: HomePr
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center overscroll-contain bg-black/45 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-labelledby="home-quick-view-title"

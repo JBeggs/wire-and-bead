@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { serverNewsApi } from '@/lib/api-server'
 import { Article } from '@/lib/types'
-import { Calendar, User, ArrowRight, Search } from 'lucide-react'
+import { Calendar, User, ArrowRight, Search, Newspaper } from 'lucide-react'
 import PageHero from '@/components/hero/PageHero'
 
 interface ArticlesPageProps {
@@ -140,7 +140,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
                     />
                   ) : (
                     <div className="w-full h-48 bg-vintage-primary/10 flex items-center justify-center">
-                      <span className="text-4xl font-playfair text-vintage-primary/30">P&P</span>
+                      <Newspaper className="w-12 h-12 text-vintage-primary/30" aria-hidden />
                     </div>
                   )}
                   <div className="p-5">
@@ -179,7 +179,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
           ) : (
             <div className="text-center py-16">
               <div className="w-16 h-16 mx-auto mb-4 bg-vintage-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-playfair text-vintage-primary">P&P</span>
+                <Newspaper className="w-8 h-8 text-vintage-primary" aria-hidden />
               </div>
               <h2 className="text-xl font-semibold text-text mb-2">
                 {search || category ? 'No articles match your filters' : 'No articles yet'}

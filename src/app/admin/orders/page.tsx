@@ -19,6 +19,8 @@ import {
 interface OrderItem {
   id: string
   product_image?: string
+  supplier_slug?: string
+  cancelled?: boolean
 }
 
 interface Order {
@@ -31,6 +33,7 @@ interface Order {
   delivery_method: string
   waybill_number?: string
   tracking_number?: string
+  fulfillment_split?: { gumtree?: 'collect' | 'deliver'; other_courier?: string }
   created_at: string
   paid_at?: string
   customer_email?: string
@@ -42,6 +45,35 @@ interface Order {
 }
 
 const PAGE_SIZE = 20
+
+function normalizeSupplierSlug(raw: string | undefined): string {
+  if (!raw) return ''
+  return raw.trim().toLowerCase().replace(/[\s_-]+/g, '')
+}
+
+function orderRequiresCourierGuyShipment(order: Order): boolean {
+  if ((order.delivery_method || '').trim().toLowerCase() === 'collect') return false
+  const split = order.fulfillment_split || {}
+  const gumtreeCollect = (split.gumtree || '').trim().toLowerCase() === 'collect'
+  const hasOtherCourierLeg = Boolean((split.other_courier || '').trim())
+
+  const activeItems = (order.items || []).filter((item) => !item.cancelled)
+  let hasNonGumtreeCourierItem = false
+  let hasGumtreeCourierItem = false
+  for (const item of activeItems) {
+    const slug = normalizeSupplierSlug(item.supplier_slug)
+    if (!slug || slug === 'temu' || slug === 'aliexpress' || slug === 'ubuy') {
+      hasNonGumtreeCourierItem = true
+      continue
+    }
+    if (slug === 'gumtree') hasGumtreeCourierItem = true
+  }
+
+  if (hasNonGumtreeCourierItem) return true
+  if (hasOtherCourierLeg) return true
+  if (hasGumtreeCourierItem && !gumtreeCollect) return true
+  return false
+}
 
 export default function AdminOrdersPage() {
   const router = useRouter()
@@ -136,6 +168,7 @@ export default function AdminOrdersPage() {
   }
 
   const canCreateShipment = (order: Order) =>
+    orderRequiresCourierGuyShipment(order) &&
     (order.status === 'paid' || order.status === 'processing') &&
     !order.waybill_number &&
     !order.tracking_number

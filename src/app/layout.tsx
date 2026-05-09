@@ -16,6 +16,7 @@ import {
 } from '@/contexts/theme-config'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner'
 import { getCompany } from '@/lib/company'
 import { resolveLocale } from '@/lib/locale'
 
@@ -150,6 +151,7 @@ export default async function RootLayout({
                     <main className="flex-1">{children}</main>
                     <Footer />
                   </div>
+                  <CookieConsentBanner />
                 </CartProvider>
               </AuthProvider>
             </ToastProvider>
