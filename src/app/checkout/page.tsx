@@ -480,7 +480,17 @@ export default function CheckoutPage() {
         showError('Failed to create payment session')
       }
     } catch (error: any) {
-      showError(error.message || 'Failed to process checkout')
+      const errPayload = error?.details?.error
+      const phoneBlocked =
+        errPayload &&
+        typeof errPayload === 'object' &&
+        errPayload.code === 'PHONE_NOT_VERIFIED'
+      const checkoutMsg = phoneBlocked
+        ? typeof errPayload.message === 'string' && errPayload.message.trim()
+          ? errPayload.message
+          : 'Please verify your cellphone number on your profile before checkout.'
+        : error.message || 'Failed to process checkout'
+      showError(checkoutMsg)
     } finally {
       setProcessing(false)
     }

@@ -41,10 +41,13 @@ export default function RegisterPage() {
     }
 
     try {
-      const { error } = await signUp(email, password, fullName, phone.trim())
+      const { error, verificationRequired, email: verificationEmail } = await signUp(email, password, fullName, phone.trim())
       
       if (error) {
         showError(error)
+      } else if (verificationRequired && verificationEmail) {
+        showSuccess('Check your email to verify your account before signing in.')
+        router.push(`/auth/verify-email?email=${encodeURIComponent(verificationEmail.trim())}`)
       } else {
         showSuccess('Account created! Syncing your cart...')
         try {

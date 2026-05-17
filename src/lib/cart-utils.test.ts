@@ -1,5 +1,5 @@
 /**
- * Cart utils unit tests - cost-based delivery threshold
+ * Cart utils unit tests — free-delivery threshold vs retail subtotal (matches cart totals / API).
  */
 import { describe, it, expect } from 'vitest'
 import { groupCartItems, getCartExtraDelivery, isCourierGuyCartItem } from './cart-utils'
@@ -22,7 +22,7 @@ function makeItem(overrides: Partial<CartItem> & { price: number; quantity: numb
 }
 
 describe('groupCartItems', () => {
-  it('uses cost_price for threshold eligibility when available', () => {
+  it('uses retail subtotal for threshold eligibility', () => {
     const items: CartItem[] = [
       makeItem({
         id: 'a',
@@ -38,14 +38,14 @@ describe('groupCartItems', () => {
     ]
     const groups = groupCartItems(items)
     const g = groups.find((x) => x.slug === 'supplier-a')!
-    expect(g.thresholdSubtotal).toBe(160)
+    expect(g.thresholdSubtotal).toBe(400)
     expect(g.displaySubtotal).toBe(400)
     expect(g.belowThreshold).toBe(true)
-    expect(g.amountToFreeDelivery).toBe(340)
+    expect(g.amountToFreeDelivery).toBe(100)
     expect(g.thresholdUnavailable).toBe(false)
   })
 
-  it('threshold met when cost-based subtotal >= threshold', () => {
+  it('threshold met when retail subtotal >= threshold', () => {
     const items: CartItem[] = [
       makeItem({
         id: 'a',
@@ -61,13 +61,13 @@ describe('groupCartItems', () => {
     ]
     const groups = groupCartItems(items)
     const g = groups.find((x) => x.slug === 'supplier-a')!
-    expect(g.thresholdSubtotal).toBe(600)
+    expect(g.thresholdSubtotal).toBe(1000)
     expect(g.belowThreshold).toBe(false)
     expect(g.amountToFreeDelivery).toBe(0)
     expect(g.deliveryCharge).toBe(0)
   })
 
-  it('sets thresholdUnavailable when cost_price missing for any item', () => {
+  it('missing cost_price does not affect retail-based threshold progress', () => {
     const items: CartItem[] = [
       makeItem({
         id: 'a',
@@ -93,14 +93,14 @@ describe('groupCartItems', () => {
     ]
     const groups = groupCartItems(items)
     const g = groups.find((x) => x.slug === 'supplier-a')!
-    expect(g.thresholdSubtotal).toBe(null)
-    expect(g.thresholdUnavailable).toBe(true)
-    expect(g.belowThreshold).toBe(true)
+    expect(g.thresholdSubtotal).toBe(750)
+    expect(g.thresholdUnavailable).toBe(false)
+    expect(g.belowThreshold).toBe(false)
     expect(g.amountToFreeDelivery).toBe(0)
-    expect(g.deliveryCharge).toBe(50)
+    expect(g.deliveryCharge).toBe(0)
   })
 
-  it('uses top-level cost_price when product.cost_price missing', () => {
+  it('amount to free delivery ignores cost_price; only retail vs threshold matters', () => {
     const items: CartItem[] = [
       makeItem({
         id: 'a',
@@ -115,9 +115,9 @@ describe('groupCartItems', () => {
     ]
     const groups = groupCartItems(items)
     const g = groups.find((x) => x.slug === 'supplier-a')!
-    expect(g.thresholdSubtotal).toBe(180)
+    expect(g.thresholdSubtotal).toBe(400)
     expect(g.belowThreshold).toBe(true)
-    expect(g.amountToFreeDelivery).toBe(320)
+    expect(g.amountToFreeDelivery).toBe(100)
   })
 
   it('keeps display subtotal based on selling price', () => {
@@ -138,7 +138,7 @@ describe('groupCartItems', () => {
     const g = groups.find((x) => x.slug === 'supplier-a')!
     expect(g.subtotal).toBe(400)
     expect(g.displaySubtotal).toBe(400)
-    expect(g.thresholdSubtotal).toBe(160)
+    expect(g.thresholdSubtotal).toBe(400)
   })
 
   it('Courier Guy groups have no threshold logic', () => {
@@ -184,7 +184,7 @@ describe('isCourierGuyCartItem', () => {
 })
 
 describe('getCartExtraDelivery', () => {
-  it('sums delivery charges from cost-based threshold groups', () => {
+  it('sums delivery charges from retail threshold groups', () => {
     const items: CartItem[] = [
       makeItem({
         id: 'a',

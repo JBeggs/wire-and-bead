@@ -33,8 +33,21 @@ interface AuthContextType {
   profile: Profile | null
   companyId: string | null
   loading: boolean
-  signIn: (username: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: any }>
+  signIn: (
+    username: string,
+    password: string,
+  ) => Promise<{
+    error: string | null
+    code?: string
+    verificationEmailSent?: boolean
+    verificationEmailCooldown?: boolean
+  }>
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    phone: string,
+  ) => Promise<{ error: string | null; verificationRequired?: boolean; email?: string }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -225,10 +238,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         errFromDetails ||
         error?.response?.data?.error ||
         'Login failed. Please check your credentials.'
+      const details = error?.details as
+        | {
+            code?: string
+            verification_email_sent?: boolean
+            verification_email_cooldown?: boolean
+          }
+        | undefined
+      const apiCodeFromDetails =
+        details && typeof details.code === 'string' ? details.code : ''
+      const apiCode =
+        apiCodeFromDetails ||
+        (error?.details && typeof error.details === 'object' && error.details !== null && 'code' in error.details
+          ? String((error.details as { code?: string }).code || '')
+          : '')
+      const codeFromError =
+        typeof error?.code === 'string' && !String(error.code).startsWith('HTTP_') ? error.code : ''
+      const code =
+        apiCode ||
+        (typeof codeFromError === 'string' && codeFromError ? codeFromError : '')
+
       if (process.env.NODE_ENV === 'development') {
         console.error('Login error:', errorMessage, error)
       }
-      return { error: String(errorMessage || 'Login failed. Please check your credentials.') }
+      return {
+        error: String(errorMessage || 'Login failed. Please check your credentials.'),
+        code:
+          code === 'email_not_verified'
+            ? 'email_not_verified'
+            : code === 'phone_not_verified'
+              ? 'phone_not_verified'
+              : undefined,
+        verificationEmailSent: details?.verification_email_sent === true,
+        verificationEmailCooldown: details?.verification_email_cooldown === true,
+      }
     } finally {
       setLoading(false)
     }
@@ -244,12 +287,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         full_name: fullName,
         phone,
       })
-      
+
+      const needsVerify =
+        'email_verification_required' in response &&
+        Boolean((response as { email_verification_required?: boolean }).email_verification_required)
+      if (needsVerify) {
+        authApi.logout()
+        setUser(null)
+        setProfile(null)
+        setCompanyId(null)
+        return { error: null, verificationRequired: true as const, email }
+      }
+
       setUser(response.user)
       setCompanyId(response.company?.id || null)
-      
+
       await fetchProfile()
-      
+
       return { error: null }
     } catch (error: any) {
       console.error('Registration error:', error)
