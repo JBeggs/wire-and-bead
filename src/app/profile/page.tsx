@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { ecommerceApi, newsApi } from '@/lib/api'
+import { ecommerceApi, newsApi, getApiErrorMessage } from '@/lib/api'
 import { Order, IntegrationSettings, IntegrationSettingsUpdatePayload } from '@/lib/types'
 import { useToast } from '@/contexts/ToastContext'
 import { Package, User, Calendar, MapPin, ChevronRight, Loader2, Save, Building2, Clock, Settings, CreditCard, Truck, Eye, EyeOff, UserCircle, ShoppingBag, Globe, Zap } from 'lucide-react'
@@ -139,7 +139,9 @@ export default function ProfilePage() {
       const social = profile?.social_links || {}
       const prefs = profile?.preferences || {}
       setFormData({
-        email: ((profile as any)?.email ?? user?.email ?? '') as string,
+        email: (
+          ((profile as any)?.pending_email || (profile as any)?.email || user?.email || '') as string
+        ),
         first_name: (profile as any)?.first_name || first,
         last_name: (profile as any)?.last_name || last,
         phone: (profile as any)?.phone || '',
@@ -261,7 +263,9 @@ export default function ProfilePage() {
     setUpdating(true)
     try {
       const fullName = [formData.first_name, formData.last_name].filter(Boolean).join(' ')
-      await newsApi.profile.patch({
+      const prevLoginEmail = (profile?.email || '').trim().toLowerCase()
+      const typedEmail = formData.email.trim().toLowerCase()
+      const updated: any = await newsApi.profile.patch({
         full_name: fullName || undefined,
         first_name: formData.first_name || undefined,
         last_name: formData.last_name || undefined,
@@ -273,9 +277,13 @@ export default function ProfilePage() {
         preferences: formData.preferences,
       })
       await refreshProfile()
-      showSuccess('Profile updated successfully')
+      if (typedEmail !== prevLoginEmail && updated?.pending_email) {
+        showSuccess('Check your inbox to confirm your new email. Login still uses your current address until then.')
+      } else {
+        showSuccess('Profile updated successfully')
+      }
     } catch (error: any) {
-      showError(error.message || 'Failed to update profile')
+      showError(getApiErrorMessage(error, 'Failed to update profile'))
     } finally {
       setUpdating(false)
     }
@@ -324,7 +332,7 @@ export default function ProfilePage() {
       }
       showSuccess('Business profile updated')
     } catch (error: any) {
-      showError(error.message || 'Failed to update business profile')
+      showError(getApiErrorMessage(error, 'Failed to update business profile'))
     } finally {
       setUpdatingCompany(false)
     }
@@ -358,7 +366,7 @@ export default function ProfilePage() {
         showSuccess('Profile picture updated')
       }
     } catch (error: any) {
-      showError(error.message || 'Failed to upload profile picture')
+      showError(getApiErrorMessage(error, 'Failed to upload profile picture'))
     } finally {
       setUploadingAvatar(false)
       e.target.value = ''
@@ -392,7 +400,7 @@ export default function ProfilePage() {
       }
       showSuccess('Integration settings saved')
     } catch (error: any) {
-      showError(error.message || 'Failed to save integration settings')
+      showError(getApiErrorMessage(error, 'Failed to save integration settings'))
     } finally {
       setUpdatingIntegration(false)
     }
@@ -421,7 +429,7 @@ export default function ProfilePage() {
         showSuccess('Logo updated')
       }
     } catch (error: any) {
-      showError(error.message || 'Failed to upload logo')
+      showError(getApiErrorMessage(error, 'Failed to upload logo'))
     } finally {
       setUploadingLogo(false)
       e.target.value = ''
@@ -444,7 +452,7 @@ export default function ProfilePage() {
       setCompany((c) => (c ? { ...c, logo: null, logo_url: '' } : null))
       showSuccess('Logo removed')
     } catch (error: any) {
-      showError(error.message || 'Failed to remove logo')
+      showError(getApiErrorMessage(error, 'Failed to remove logo'))
     } finally {
       setRemovingLogo(false)
     }
@@ -573,6 +581,12 @@ export default function ProfilePage() {
                       required
                     />
                     <p className="text-xs text-text-muted">Login and notifications — separate from storefront business email</p>
+                    {profile?.pending_email ? (
+                      <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-2">
+                        A confirmation link was sent to <strong>{profile.pending_email}</strong>.
+                        Your login email stays <strong>{profile.email}</strong> until you confirm.
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -1016,7 +1030,7 @@ export default function ProfilePage() {
                         setSiteSettingsValues(vals)
                         showSuccess('Site settings updated')
                       } catch (err: any) {
-                        showError(err?.message || 'Failed to update site settings')
+                        showError(getApiErrorMessage(err, 'Failed to update site settings'))
                       } finally {
                         setUpdatingSiteSettings(false)
                       }

@@ -57,7 +57,7 @@ export default function ToastComponent({ toast, onClose }: ToastProps) {
       className={`
         ${colors[toast.type]}
         border-4 rounded-2xl shadow-2xl p-6 w-full
-        flex items-start gap-4 bg-white
+        flex items-start gap-4
       `}
     >
       <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${iconColors[toast.type]}`} />

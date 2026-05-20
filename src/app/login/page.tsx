@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { useToast } from '@/contexts/ToastContext'
+import { authApi } from '@/lib/api'
 import { Lock, User, ArrowRight } from 'lucide-react'
 
 export default function LoginPage() {
@@ -22,10 +23,27 @@ export default function LoginPage() {
   const [needsVerifyHint, setNeedsVerifyHint] = useState(false)
   const [needsPhoneVerifyHint, setNeedsPhoneVerifyHint] = useState(false)
   const [resendBusy, setResendBusy] = useState(false)
+  const [loginError, setLoginError] = useState('')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('company_id')
+      document.cookie = 'auth_token=; path=/; max-age=0'
+      document.cookie = 'refresh_token=; path=/; max-age=0'
+      document.cookie = 'company_id=; path=/; max-age=0'
+      authApi.logout()
+    } catch {
+      /* ignore */
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setLoginError('')
     setNeedsVerifyHint(false)
     setNeedsPhoneVerifyHint(false)
 
@@ -49,6 +67,7 @@ export default function LoginPage() {
             detail +=
               ' A verification email was already sent recently (within 24 hours). Check your existing messages for the link, or use “Resend email” below if you still cannot find it.'
           }
+          setLoginError(detail)
           showError(detail)
           setNeedsVerifyHint(true)
         } else if (code === 'phone_not_verified') {
@@ -56,10 +75,13 @@ export default function LoginPage() {
             typeof error === 'string' && error.trim()
               ? error
               : 'Your cellphone number must be verified before you can sign in. Open your profile to complete verification.'
+          setLoginError(detail)
           showError(detail)
           setNeedsPhoneVerifyHint(true)
         } else {
-          showError(typeof error === 'string' ? error : 'Login failed')
+          const msg = typeof error === 'string' ? error : 'Login failed'
+          setLoginError(msg)
+          showError(msg)
         }
       } else {
         showSuccess('Login successful! Syncing your cart...')
@@ -71,7 +93,9 @@ export default function LoginPage() {
         router.push(returnUrl)
       }
     } catch {
-      showError('An unexpected error occurred')
+      const msg = 'An unexpected error occurred'
+      setLoginError(msg)
+      showError(msg)
     } finally {
       setIsLoading(false)
     }
@@ -90,6 +114,16 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold font-playfair text-text tracking-tight">Welcome Back</h1>
             <p className="text-text-muted mt-3 text-lg">Sign in to your account</p>
           </div>
+
+          {loginError ? (
+            <div
+              role="alert"
+              data-cy="login-submit-error"
+              className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            >
+              {loginError}
+            </div>
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">

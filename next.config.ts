@@ -1,6 +1,16 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/:icon(icon.png|favicon.png|apple-touch-icon.png)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+        ],
+      },
+    ]
+  },
   images: {
     remotePatterns: [
       {

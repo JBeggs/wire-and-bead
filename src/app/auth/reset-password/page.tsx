@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Lock, ArrowLeft } from 'lucide-react'
-import { authApi } from '@/lib/api'
+import { authApi, getApiErrorMessage } from '@/lib/api'
 import { useToast } from '@/contexts/ToastContext'
 
 function ResetPasswordForm() {
@@ -38,7 +38,7 @@ function ResetPasswordForm() {
       showSuccess(res.detail || 'Password updated.')
       router.push('/login')
     } catch (err: any) {
-      showError(err?.message || 'Invalid or expired link.')
+      showError(getApiErrorMessage(err, 'Invalid or expired link.'))
     } finally {
       setBusy(false)
     }

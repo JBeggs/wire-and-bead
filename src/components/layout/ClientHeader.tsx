@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useCartSafe } from '@/contexts/CartContext'
 import { useMounted } from '@/hooks/useMounted'
+import { ProfileNavAvatar } from '@/components/layout/ProfileNavAvatar'
 
 const ICON_HIT =
   'relative min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-text hover:text-vintage-primary transition-colors'
@@ -109,8 +110,8 @@ export default function ClientHeader() {
               </Link>
             </>
           )}
-          <Link href="/profile" className={ICON_HIT} aria-label="Profile">
-            <User className="w-5 h-5 shrink-0" />
+          <Link href="/profile" className={ICON_HIT} aria-label="Profile" data-cy="header-profile">
+            <ProfileNavAvatar profile={profile} user={user} size="sm" />
           </Link>
           <button
             type="button"

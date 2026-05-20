@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { authApi, apiClient, newsApi } from '@/lib/api'
+import { authApi, apiClient, newsApi, getApiErrorMessage } from '@/lib/api'
 
 interface User {
   id: string
@@ -14,7 +14,10 @@ interface User {
 interface Profile {
   user: string
   email: string
+  pending_email?: string
   username?: string
+  first_name?: string
+  last_name?: string
   full_name?: string
   bio?: string
   avatar_url?: string
@@ -45,9 +48,11 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    fullName: string,
+    firstName: string,
+    lastName: string,
     phone: string,
-  ) => Promise<{ error: string | null; verificationRequired?: boolean; email?: string }>
+    options?: { linkOnly?: boolean },
+  ) => Promise<{ error: string | null; verificationRequired?: boolean; email?: string; accountLinked?: boolean }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -100,12 +105,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (profileData.user) {
+        const fn =
+          (typeof profileData.first_name === 'string' && profileData.first_name) ||
+          profileData.full_name?.split(' ')[0]
+        const ln =
+          (typeof profileData.last_name === 'string' && profileData.last_name) ||
+          profileData.full_name?.split(' ').slice(1).join(' ')
         setUser({
           id: profileData.user,
           email: profileData.email,
           username: profileData.username,
-          first_name: profileData.full_name?.split(' ')[0],
-          last_name: profileData.full_name?.split(' ').slice(1).join(' '),
+          first_name: fn,
+          last_name: ln,
         })
       }
     } catch (error: any) {
@@ -227,18 +238,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await fetchProfile()
       
       return { error: null }
-    } catch (error: any) {
-      const errDetail = error?.details?.error
-      const errFromDetails = typeof error?.details === 'object' && error?.details !== null
-        ? (typeof error.details.error === 'string' ? error.details.error : error.details.message)
-        : null
-      const errorMessage =
-        error?.message ||
-        (typeof errDetail === 'string' ? errDetail : null) ||
-        errFromDetails ||
-        error?.response?.data?.error ||
-        'Login failed. Please check your credentials.'
-      const details = error?.details as
+    } catch (error: unknown) {
+      const fallback = 'Login failed. Please check your credentials.'
+      const errObj = error as {
+        details?: {
+          code?: string
+          verification_email_sent?: boolean
+          verification_email_cooldown?: boolean
+        }
+        code?: string
+      }
+      const details = errObj?.details as
         | {
             code?: string
             verification_email_sent?: boolean
@@ -249,20 +259,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         details && typeof details.code === 'string' ? details.code : ''
       const apiCode =
         apiCodeFromDetails ||
-        (error?.details && typeof error.details === 'object' && error.details !== null && 'code' in error.details
-          ? String((error.details as { code?: string }).code || '')
+        (errObj?.details &&
+        typeof errObj.details === 'object' &&
+        errObj.details !== null &&
+        'code' in errObj.details
+          ? String((errObj.details as { code?: string }).code || '')
           : '')
       const codeFromError =
-        typeof error?.code === 'string' && !String(error.code).startsWith('HTTP_') ? error.code : ''
+        typeof errObj?.code === 'string' && !String(errObj.code).startsWith('HTTP_') ? errObj.code : ''
       const code =
         apiCode ||
         (typeof codeFromError === 'string' && codeFromError ? codeFromError : '')
+      const errorMessage = getApiErrorMessage(error, fallback)
 
       if (process.env.NODE_ENV === 'development') {
         console.error('Login error:', errorMessage, error)
       }
       return {
-        error: String(errorMessage || 'Login failed. Please check your credentials.'),
+        error: String(errorMessage.trim() || fallback),
         code:
           code === 'email_not_verified'
             ? 'email_not_verified'
@@ -277,26 +291,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string, fullName: string, phone: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    phone: string,
+    options?: { linkOnly?: boolean },
+  ) => {
     setLoading(true)
     try {
-      const response = await authApi.register({
-        email,
-        password,
-        password_confirm: password,
-        full_name: fullName,
-        phone,
-      })
+      const response = options?.linkOnly
+        ? await authApi.linkTenantAccount({ email, password })
+        : await authApi.register({
+            email,
+            password,
+            password_confirm: password,
+            first_name: firstName,
+            last_name: lastName,
+            phone,
+          })
 
       const needsVerify =
         'email_verification_required' in response &&
         Boolean((response as { email_verification_required?: boolean }).email_verification_required)
+      const accountLinked = Boolean(
+        (response as { account_linked?: boolean }).account_linked,
+      )
       if (needsVerify) {
         authApi.logout()
         setUser(null)
         setProfile(null)
         setCompanyId(null)
-        return { error: null, verificationRequired: true as const, email }
+        return { error: null, verificationRequired: true as const, email, accountLinked }
       }
 
       setUser(response.user)
@@ -304,39 +331,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       await fetchProfile()
 
-      return { error: null }
-    } catch (error: any) {
+      return { error: null, accountLinked }
+    } catch (error: unknown) {
       console.error('Registration error:', error)
-      
-      let errorMessage = 'Registration failed. Please try again.'
-      
-      if (error?.details?.error) {
-        const errorDetails = error.details.error
-        if (typeof errorDetails === 'string') {
-          errorMessage = errorDetails
-        } else if (typeof errorDetails === 'object' && errorDetails !== null) {
-          const fieldLabels: Record<string, string> = {
-            email: 'Email',
-            username: 'Username',
-            password: 'Password',
-            password_confirm: 'Password confirmation',
-            full_name: 'Full name',
-            phone: 'Cellphone',
-          }
-          
-          const errorMessages = Object.entries(errorDetails).map(([field, messages]: [string, any]) => {
-            const fieldLabel = fieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ')
-            const messageArray = Array.isArray(messages) ? messages : [messages]
-            const messageText = messageArray.join(', ')
-            return `${fieldLabel}: ${messageText}`
-          })
-          errorMessage = errorMessages.join('. ')
-        }
-      } else if (error?.message) {
-        errorMessage = error.message
-      }
-      
-      return { error: errorMessage }
+      const fallback = 'Registration failed. Please try again.'
+      const msg = getApiErrorMessage(error, fallback).trim() || fallback
+      return { error: msg }
     } finally {
       setLoading(false)
     }

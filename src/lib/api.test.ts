@@ -83,20 +83,94 @@ describe('authApi', () => {
         email: 'new@test.com',
         password: 'pass123',
         password_confirm: 'pass123',
-        full_name: 'Test User',
+        first_name: 'Test',
+        last_name: 'User',
+        phone: '+27821234567',
       });
 
       expect(fetchMock).toHaveBeenCalledWith(
         `${API_BASE}/auth/register/`,
         expect.objectContaining({
           method: 'POST',
-          body: expect.stringContaining('"email":"new@test.com"'),
-        })
-      );
+        }),
+      )
+      const postInit = fetchMock.mock.calls[0]?.[1] as RequestInit
+      const parsed = JSON.parse(String(postInit.body)) as Record<string, string>
+      expect(parsed.email).toBe('new@test.com')
+      expect(parsed.first_name).toBe('Test')
+      expect(parsed.last_name).toBe('User')
+      expect(parsed.phone).toBe('+27821234567')
+      expect(parsed.company_slug).toBe(COMPANY_SLUG)
       expect(apiClient.getToken()).toBe('reg-access');
       expect(apiClient.getCompanyId()).toBe('company-1');
     });
   });
+
+
+  describe('checkRegistrationEmail', () => {
+    it('POSTs to /auth/check-registration-email/ with normalized email and company_slug', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        createMockResponse({ status: 'existing_can_link' }),
+      )
+      vi.stubGlobal('fetch', fetchMock)
+
+      const result = await authApi.checkRegistrationEmail('User@Test.COM')
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_BASE}/auth/check-registration-email/`,
+        expect.objectContaining({ method: 'POST' }),
+      )
+      const postInit = fetchMock.mock.calls[0]?.[1] as RequestInit
+      const parsed = JSON.parse(String(postInit.body)) as Record<string, unknown>
+      expect(parsed.email).toBe('user@test.com')
+      expect(parsed.company_slug).toBe(COMPANY_SLUG)
+      expect(parsed.linkable).toBe(true)
+      expect(result.status).toBe('existing_can_link')
+    })
+
+    it('passes linkable: false when requested', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        createMockResponse({ status: 'existing_no_link' }),
+      )
+      vi.stubGlobal('fetch', fetchMock)
+
+      await authApi.checkRegistrationEmail('biz@test.com', { linkable: false })
+
+      const postInit = fetchMock.mock.calls[0]?.[1] as RequestInit
+      const parsed = JSON.parse(String(postInit.body)) as Record<string, unknown>
+      expect(parsed.linkable).toBe(false)
+    })
+  })
+
+  describe('linkTenantAccount', () => {
+    it('POSTs to /auth/link-tenant/ and sets tokens on success', async () => {
+      const mockResponse = {
+        tokens: { access: 'link-access', refresh: 'link-refresh' },
+        user: { id: '3', email: 'linked@test.com' },
+        company: { id: 'company-1', name: 'Store' },
+        account_linked: true,
+      }
+      const fetchMock = vi.fn().mockResolvedValue(createMockResponse(mockResponse))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const result = await authApi.linkTenantAccount({
+        email: 'Linked@Test.COM',
+        password: 'secret',
+      })
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_BASE}/auth/link-tenant/`,
+        expect.objectContaining({ method: 'POST' }),
+      )
+      const postInit = fetchMock.mock.calls[0]?.[1] as RequestInit
+      const parsed = JSON.parse(String(postInit.body)) as Record<string, string>
+      expect(parsed.email).toBe('linked@test.com')
+      expect(parsed.password).toBe('secret')
+      expect(parsed.company_slug).toBe(COMPANY_SLUG)
+      expect(apiClient.getToken()).toBe('link-access')
+      expect(result.account_linked).toBe(true)
+    })
+  })
 
   describe('logout', () => {
     it('clears token, refresh token, and company id', async () => {
