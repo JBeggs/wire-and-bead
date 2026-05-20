@@ -1,5 +1,9 @@
 import Link from 'next/link'
 import { serverNewsApi } from '@/lib/api-server'
+import {
+  filterArticlesByDisplaySettings,
+  getArticleDisplaySettings,
+} from '@/lib/article-display-settings'
 import { Article } from '@/lib/types'
 import { Calendar, User, ArrowRight, Search, Newspaper } from 'lucide-react'
 import PageHero from '@/components/hero/PageHero'
@@ -52,10 +56,16 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   const category = typeof params.category === 'string' ? params.category : undefined
   const search = typeof params.search === 'string' ? params.search : undefined
 
-  const [articles, categories] = await Promise.all([
+  const [rawArticles, categories, displaySettings] = await Promise.all([
     getArticles({ search, category }),
     getCategories(),
+    getArticleDisplaySettings(),
   ])
+  const articles = filterArticlesByDisplaySettings(
+    rawArticles as Article[],
+    displaySettings,
+    'articles',
+  )
 
   return (
     <div className="min-h-screen bg-vintage-background">
