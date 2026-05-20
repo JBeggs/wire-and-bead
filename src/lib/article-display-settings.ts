@@ -1,7 +1,17 @@
 import 'server-only'
+import { resolveArticleAuthorIdFromArticle } from '@/lib/article-author-options'
 import { getSiteSettingsMap } from '@/lib/site-settings'
 import type { ArticleDisplaySettings, ArticleDisplayScope } from '@/lib/article-display-settings-keys'
 import { ARTICLE_DISPLAY_SETTING_KEYS } from '@/lib/article-display-settings-keys'
+
+export {
+  resolveArticleAuthorId,
+  resolveArticleAuthorIdFromArticle,
+  resolveArticleAuthorLabel,
+  buildAuthorOptionsFromArticles,
+  type AuthorSelectOption,
+  type ArticleAuthorFields,
+} from '@/lib/article-author-options'
 
 export {
   NEWS_CONTENT_COMPANY_SLUG,
@@ -57,16 +67,6 @@ export const getArticleDisplaySettings = async (): Promise<ArticleDisplaySetting
   return parseArticleDisplaySettings(map)
 }
 
-export function resolveArticleAuthorId(author: unknown): string | null {
-  if (author == null) return null
-  if (typeof author === 'number' || typeof author === 'string') return String(author)
-  if (typeof author === 'object' && author !== null && 'id' in author) {
-    const id = (author as { id: unknown }).id
-    if (id != null) return String(id)
-  }
-  return null
-}
-
 export function resolveArticleCategoryId(article: {
   category?: { id?: unknown } | null
   category_id?: unknown
@@ -78,7 +78,12 @@ export function resolveArticleCategoryId(article: {
 
 /** Filter published articles for articles page or home shelf. Empty ID lists = no filter (show all). */
 export function filterArticlesByDisplaySettings<
-  T extends { author?: unknown; category?: { id?: unknown } | null; category_id?: unknown },
+  T extends {
+    author?: unknown
+    author_id?: unknown
+    category?: { id?: unknown } | null
+    category_id?: unknown
+  },
 >(articles: T[], settings: ArticleDisplaySettings, scope: ArticleDisplayScope): T[] {
   const categoryIds =
     scope === 'home' ? settings.homeCategoryIds : settings.articlesPageCategoryIds
@@ -98,7 +103,7 @@ export function filterArticlesByDisplaySettings<
   if (authorIds.length > 0) {
     const allowed = new Set(authorIds)
     result = result.filter((a) => {
-      const aid = resolveArticleAuthorId(a.author)
+      const aid = resolveArticleAuthorIdFromArticle(a)
       return aid !== null && allowed.has(aid)
     })
   }

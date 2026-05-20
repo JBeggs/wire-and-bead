@@ -4,10 +4,26 @@ import { useCallback, useEffect, useState } from 'react'
 import { Loader2, Newspaper, Save } from 'lucide-react'
 import { newsApi, getApiErrorMessage } from '@/lib/api'
 import {
+  buildAuthorOptionsFromArticles,
+  type ArticleAuthorFields,
+} from '@/lib/article-author-options'
+import {
   ARTICLE_DISPLAY_SETTING_KEYS,
   NEWS_CONTENT_COMPANY_SLUG,
 } from '@/lib/article-display-settings-keys'
 import { useToast } from '@/contexts/ToastContext'
+
+function newsContentFetchHeaders(): HeadersInit {
+  const headers: Record<string, string> = {
+    'X-Company-Slug': NEWS_CONTENT_COMPANY_SLUG,
+    'Content-Type': 'application/json',
+  }
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('auth_token')
+    if (token) headers.Authorization = `Bearer ${token}`
+  }
+  return headers
+}
 
 type SelectOption = { id: string; label: string }
 
@@ -54,7 +70,7 @@ function MultiSelectGroup({
     <div>
       <p className="text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{label}</p>
       <p className="text-sm text-text-muted mb-2">{hint}</p>
-      <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-surface-raised p-3 space-y-2">
+      <div className="max-h-40 overflow-y-auto rounded-lg border border-border-default bg-surface-raised p-3 space-y-2">
         {options.map((opt) => (
           <label
             key={opt.id}
@@ -64,7 +80,7 @@ function MultiSelectGroup({
               type="checkbox"
               checked={selected.includes(opt.id)}
               onChange={() => toggle(opt.id)}
-              className="rounded border-border"
+              className="rounded border-border-default"
             />
             <span>{opt.label}</span>
           </label>
@@ -101,15 +117,15 @@ export default function ArticleDisplaySettingsForm() {
   const loadOptions = useCallback(async () => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://3pillars.pythonanywhere.com/api'
 
-    const [catRes, articlesRaw, settingsRaw] = await Promise.all([
+    const [catRes, articlesRes, settingsRaw] = await Promise.all([
       fetch(`${baseUrl}/news/categories/`, {
-        headers: {
-          'X-Company-Slug': NEWS_CONTENT_COMPANY_SLUG,
-          'Content-Type': 'application/json',
-        },
+        headers: newsContentFetchHeaders(),
         cache: 'no-store',
       }),
-      newsApi.articles.list({ status: 'published' }),
+      fetch(`${baseUrl}/news/articles/?status=published`, {
+        headers: newsContentFetchHeaders(),
+        cache: 'no-store',
+      }),
       newsApi.siteSettings.list(),
     ])
 
@@ -126,29 +142,14 @@ export default function ArticleDisplaySettingsForm() {
       )
     }
 
-    const articles = Array.isArray(articlesRaw)
-      ? articlesRaw
-      : (articlesRaw as { results?: unknown[] })?.results || []
-    const authorMap = new Map<string, string>()
-    for (const article of articles as {
-      author?: { id?: string; full_name?: string; first_name?: string; last_name?: string }
-    }[]) {
-      const a = article.author
-      if (!a?.id) continue
-      const id = String(a.id)
-      if (!authorMap.has(id)) {
-        const name =
-          a.full_name?.trim() ||
-          [a.first_name, a.last_name].filter(Boolean).join(' ').trim() ||
-          `Author ${id}`
-        authorMap.set(id, name)
-      }
+    let articles: unknown[] = []
+    if (articlesRes.ok) {
+      const articlesData: unknown = await articlesRes.json()
+      articles = Array.isArray(articlesData)
+        ? articlesData
+        : (articlesData as { results?: unknown[] })?.results || []
     }
-    setAuthors(
-      [...authorMap.entries()]
-        .map(([id, label]) => ({ id, label }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    )
+    setAuthors(buildAuthorOptionsFromArticles(articles as ArticleAuthorFields[]))
 
     const settingsArr = Array.isArray(settingsRaw)
       ? settingsRaw
@@ -263,7 +264,7 @@ export default function ArticleDisplaySettingsForm() {
   return (
     <form onSubmit={handleSave} className="card p-6 space-y-6">
       <div>
-        <h2 className="text-lg font-bold font-playfair text-text flex items-center gap-2">
+        <h2 className="text-lg font-bold font-heading text-text flex items-center gap-2">
           <Newspaper className="w-5 h-5 opacity-70" />
           Article display
         </h2>
@@ -273,7 +274,7 @@ export default function ArticleDisplaySettingsForm() {
         </p>
       </div>
 
-      <div className="space-y-4 border-t border-border pt-6">
+      <div className="space-y-4 border-t border-border-default pt-6">
         <h3 className="text-sm font-bold uppercase tracking-widest text-text">Articles page</h3>
         <div className="grid md:grid-cols-2 gap-6">
           <MultiSelectGroup
@@ -293,14 +294,14 @@ export default function ArticleDisplaySettingsForm() {
         </div>
       </div>
 
-      <div className="space-y-4 border-t border-border pt-6">
+      <div className="space-y-4 border-t border-border-default pt-6">
         <h3 className="text-sm font-bold uppercase tracking-widest text-text">Home page</h3>
         <label className="flex items-center gap-2 text-sm text-text cursor-pointer">
           <input
             type="checkbox"
             checked={homeEnabled}
             onChange={(e) => setHomeEnabled(e.target.checked)}
-            className="rounded border-border text-forest-primary focus:ring-forest-primary/30"
+            className="rounded border-border-default text-primary focus:ring-primary/30"
           />
           <span>Show article section on the home page</span>
         </label>
