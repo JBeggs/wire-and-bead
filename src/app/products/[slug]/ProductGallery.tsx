@@ -3,7 +3,12 @@
 import { useState } from 'react'
 import { Product } from '@/lib/types'
 import { Clock, Sparkles } from 'lucide-react'
-import { getProductBundleImages, getProductGalleryThumbImages } from '@/lib/image-utils'
+import {
+  getProductBundleImages,
+  getProductGalleryThumbImages,
+  getPublicImageUrl,
+  IMAGE_DIM,
+} from '@/lib/image-utils'
 
 interface ProductGalleryProps {
   product: Product
@@ -13,7 +18,8 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   const fullImages = getProductBundleImages(product)
   const thumbImages = getProductGalleryThumbImages(fullImages, product)
   const [activeIndex, setActiveIndex] = useState(0)
-  const activeImage = fullImages[activeIndex] ?? fullImages[0] ?? ''
+  const activeFull = fullImages[activeIndex] ?? fullImages[0] ?? ''
+  const activeImage = activeFull ? getPublicImageUrl(activeFull) : ''
   const isVintage = Array.isArray(product.tags) && product.tags.some(t => (typeof t === 'string' ? t : t.name) === 'vintage')
 
   if (fullImages.length === 0) {
@@ -35,6 +41,10 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         <img
           src={activeImage}
           alt={product.name}
+          width={IMAGE_DIM.galleryMain.width}
+          height={IMAGE_DIM.galleryMain.height}
+          fetchPriority="high"
+          decoding="async"
           className="max-h-[min(86vh,880px)] w-auto max-w-full object-contain"
           onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
         />
@@ -63,8 +73,10 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
               }`}
             >
               <img
-                src={thumbImages[index] || full}
+                src={thumbImages[index] || getPublicImageUrl(full)}
                 alt={`${product.name} thumbnail ${index + 1}`}
+                width={IMAGE_DIM.galleryThumb.width}
+                height={IMAGE_DIM.galleryThumb.height}
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-contain"

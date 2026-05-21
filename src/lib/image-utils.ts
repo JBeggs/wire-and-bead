@@ -4,7 +4,18 @@
  * when the frontend is served from a different domain (e.g. Vercel).
  */
 
+import { proxyMediaUrl } from '@/lib/media-proxy'
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://3pillars.pythonanywhere.com/api'
+
+/** Intrinsic dimensions for Lighthouse (CSS layout unchanged). */
+export const IMAGE_DIM = {
+  productCard: { width: 400, height: 400 },
+  cartThumb: { width: 96, height: 96 },
+  articleCard: { width: 800, height: 450 },
+  galleryThumb: { width: 120, height: 120 },
+  galleryMain: { width: 1200, height: 1200 },
+} as const
 
 const DEFAULT_PLACEHOLDER = '/images/products/default.svg'
 
@@ -53,6 +64,17 @@ export function ensureAbsoluteImageUrl(url: string): string {
   }
   if (url.startsWith('/')) return url
   return `/images/products/${url}`
+}
+
+/** Absolute URL for <img src> — proxied through /api/media when from Django /media/. */
+export function getPublicImageUrl(url: string): string {
+  if (!url) return DEFAULT_PLACEHOLDER
+  return proxyMediaUrl(ensureAbsoluteImageUrl(url))
+}
+
+function finalizeDisplayUrl(url: string): string {
+  if (!url || url === DEFAULT_PLACEHOLDER) return url
+  return getPublicImageUrl(url)
 }
 
 /** Accepts Product, API product shape, or minimal { image?, images? } for preview extraction. */
@@ -170,11 +192,11 @@ export function getProductCardImages(product: ProductCardLike): string[] {
     ? product.image_thumbnails.filter((u): u is string => typeof u === 'string' && !!u.trim())
     : []
   if (apiThumbs.length > 0) {
-    return apiThumbs.map((u) => ensureAbsoluteImageUrl(u)).slice(0, MAX_BUNDLE_PRODUCT_IMAGES)
+    return apiThumbs.map((u) => finalizeDisplayUrl(u)).slice(0, MAX_BUNDLE_PRODUCT_IMAGES)
   }
   const mainThumb = (product.image_thumbnail || '').trim()
-  if (mainThumb) return [ensureAbsoluteImageUrl(mainThumb)]
-  return getProductBundleImages(product)
+  if (mainThumb) return [finalizeDisplayUrl(mainThumb)]
+  return getProductBundleImages(product).map(finalizeDisplayUrl)
 }
 
 /**
@@ -199,11 +221,11 @@ export function getProductGalleryThumbImages(
 
   return fullImages.map((full, index) => {
     const fromApi = apiThumbs[index]
-    if (fromApi) return fromApi
-    if (index === 0 && mainThumb) return ensureAbsoluteImageUrl(mainThumb)
+    if (fromApi) return finalizeDisplayUrl(fromApi)
+    if (index === 0 && mainThumb) return finalizeDisplayUrl(mainThumb)
     const derived = deriveThumbUrlFromFull(full)
-    if (derived && derived !== full) return ensureAbsoluteImageUrl(derived)
-    return full
+    if (derived && derived !== full) return finalizeDisplayUrl(derived)
+    return finalizeDisplayUrl(full)
   })
 }
 
@@ -226,8 +248,18 @@ export function getArticleCardImageUrl(
   } | null,
 ): string {
   const raw = pickArticleCardImageRaw(article || undefined)
-  if (raw) return ensureAbsoluteImageUrl(raw)
+  if (raw) return finalizeDisplayUrl(raw)
   return ARTICLE_IMAGE_PLACEHOLDER
+}
+
+/** Article detail hero — thumb when API provides it, else full; proxied for cache. */
+export function getArticleHeroImageUrl(
+  article?: {
+    social_image?: { file_url?: string | null; thumbnail_url?: string | null } | null
+    featured_media?: { file_url?: string | null; thumbnail_url?: string | null } | null
+  } | null,
+): string {
+  return getArticleCardImageUrl(article)
 }
 
 /** Small logo in cards and headers. */
@@ -236,9 +268,9 @@ export function getLogoCardUrl(
   logoUrl?: string | null,
 ): string {
   const fromObj = resolveCardImageUrl(logo?.file_url, logo?.thumbnail_url)
-  if (fromObj !== DEFAULT_PLACEHOLDER) return fromObj
+  if (fromObj !== DEFAULT_PLACEHOLDER) return finalizeDisplayUrl(fromObj)
   const direct = (logoUrl || '').trim()
-  if (direct) return ensureAbsoluteImageUrl(direct)
+  if (direct) return finalizeDisplayUrl(direct)
   return DEFAULT_PLACEHOLDER
 }
 

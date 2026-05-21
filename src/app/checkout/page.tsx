@@ -9,7 +9,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { Cart, CartItem, SupplierDeliveryBreakdownItem, type GumtreeFulfillmentMethod } from '@/lib/types'
 import { ArrowLeft, CreditCard, Truck, Shield, Lock, MapPin, Package } from 'lucide-react'
 import { getCartItemImages, isCourierGuyCartItem, normalizeCartResponse } from '@/lib/cart-utils'
-import { getProductCardImages } from '@/lib/image-utils'
+import { getProductCardImages, IMAGE_DIM } from '@/lib/image-utils'
 import { PudoLocationSelector, type PudoLocation } from '@/components/checkout/PudoLocationSelector'
 
 type DeliveryMethod = 'standard' | 'express' | 'pudo'
@@ -845,7 +845,10 @@ export default function CheckoutPage() {
                                   <img
                                     src={url}
                                     alt=""
+                                    width={IMAGE_DIM.cartThumb.width}
+                                    height={IMAGE_DIM.cartThumb.height}
                                     loading="lazy"
+                                    decoding="async"
                                     className="h-full w-full object-cover"
                                     onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
                                   />
@@ -856,6 +859,10 @@ export default function CheckoutPage() {
                             <img
                               src={mainImage}
                               alt=""
+                              width={IMAGE_DIM.cartThumb.width}
+                              height={IMAGE_DIM.cartThumb.height}
+                              loading="lazy"
+                              decoding="async"
                               className="h-full w-full object-cover"
                               onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
                             />

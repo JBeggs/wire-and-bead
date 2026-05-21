@@ -3,6 +3,7 @@ import { formatCountdown, getMinQuantity, getStockQuantity, isBundleProduct } fr
 import {
   ensureAbsoluteImageUrl,
   getProductGalleryThumbImages,
+  getPublicImageUrl,
   MAX_BUNDLE_PRODUCT_IMAGES,
 } from './image-utils'
 
@@ -51,7 +52,7 @@ export function getCartItemImages(item: CartItem): string[] {
   return getProductGalleryThumbImages(fullUrls, {
     image_thumbnail: nested?.image_thumbnail,
     image_thumbnails: nested?.image_thumbnails,
-  })
+  }).map(getPublicImageUrl)
 }
 
 /** Thumbnail URLs for cart/checkout line items (alias for clarity at call sites). */

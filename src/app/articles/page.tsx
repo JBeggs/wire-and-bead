@@ -5,7 +5,7 @@ import {
   getArticleDisplaySettings,
 } from '@/lib/article-display-settings'
 import { Article } from '@/lib/types'
-import { getArticleCardImageUrl } from '@/lib/image-utils'
+import { getArticleCardImageUrl, IMAGE_DIM } from '@/lib/image-utils'
 import { resolveArticleAuthorLabel } from '@/lib/article-author-options'
 import { Calendar, User, ArrowRight, Search, Newspaper } from 'lucide-react'
 import PageHero from '@/components/hero/PageHero'
@@ -147,6 +147,10 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
                   <img
                     src={getArticleCardImageUrl(article)}
                     alt={article.title}
+                    width={IMAGE_DIM.articleCard.width}
+                    height={IMAGE_DIM.articleCard.height}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="p-5">

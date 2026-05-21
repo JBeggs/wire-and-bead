@@ -68,7 +68,7 @@ function sameOriginOgImageUrl(directImageUrl: string): string {
   }
 
   const base = site.replace(/\/$/, '')
-  return `${base}/api/og-proxy?src=${encodeURIComponent(imageUrl.toString())}`
+  return `${base}/api/media?src=${encodeURIComponent(imageUrl.toString())}`
 }
 
 /** Public site origin (https, no trailing slash). Used for absolute OG URLs and optional og:url. */

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { cookies } from 'next/headers'
-import { Cormorant_Garamond, Inter, Nunito, Playfair_Display } from 'next/font/google'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -20,9 +19,7 @@ import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner'
 import { getCompany } from '@/lib/company'
 import { iconUrl } from '@/lib/icon-cache-version'
 import { resolveLocale } from '@/lib/locale'
-
-// Header/Footer/metadata all read cookies or live company data.
-export const dynamic = 'force-dynamic'
+import { themeFontClasses } from '@/lib/theme-fonts'
 
 /** Default Artisan theme surfaces — address bar tint on iOS / Android Chrome */
 export const viewport: Viewport = {
@@ -55,18 +52,6 @@ function resolveMetadataBase(): URL | undefined {
   }
   return undefined
 }
-
-// All three theme font pairs load together so the toggle is instant. Each
-// `next/font` instance exposes a CSS variable that the theme tokens refer to.
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
-const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' })
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-cormorant',
-  display: 'swap',
-})
-const nunito = Nunito({ subsets: ['latin'], variable: '--font-nunito', display: 'swap' })
 
 export async function generateMetadata(): Promise<Metadata> {
   const metadataBase = resolveMetadataBase()
@@ -125,13 +110,13 @@ export default async function RootLayout({
 }) {
   const [cookieStore, company] = await Promise.all([cookies(), getCompany()])
   const initialTheme = readThemeCookie(cookieStore.get('site_theme')?.value)
-  const fontClassNames = `${inter.variable} ${playfair.variable} ${cormorant.variable} ${nunito.variable}`
+  const { htmlVariables, bodyClassName } = themeFontClasses(initialTheme)
 
   return (
     <html
       lang={resolveLocale(company)}
       data-theme={initialTheme}
-      className={fontClassNames}
+      className={htmlVariables}
       data-scroll-behavior="smooth"
     >
       <head>
@@ -141,7 +126,7 @@ export default async function RootLayout({
         {/* No-flash theme bootstrap: runs synchronously before first paint. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
-      <body className={`${inter.className} antialiased bg-bg`}>
+      <body className={`${bodyClassName} antialiased bg-bg`}>
         <ThemeProvider initialTheme={initialTheme}>
           <CompanyProvider company={company}>
             <ToastProvider>

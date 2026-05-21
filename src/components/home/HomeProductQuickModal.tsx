@@ -14,7 +14,7 @@ import {
   getStockQuantity,
   isBundleProduct,
 } from '@/lib/product-utils'
-import { getProductBundleImages } from '@/lib/image-utils'
+import { getProductCardImages, IMAGE_DIM } from '@/lib/image-utils'
 
 interface HomeProductQuickModalProps {
   product: Product
@@ -43,7 +43,7 @@ export default function HomeProductQuickModal({ product, open, onClose }: HomePr
   const inCartQty = lineItem?.quantity ?? 0
 
   const heroImage = useMemo(() => {
-    const urls = getProductBundleImages(product)
+    const urls = getProductCardImages(product)
     return urls[0] || product.image || ''
   }, [product])
 
@@ -183,7 +183,15 @@ export default function HomeProductQuickModal({ product, open, onClose }: HomePr
         <div className="p-6 pt-2 space-y-4">
           {heroImage ? (
             <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
-              <img src={heroImage} alt="" className="w-full h-full object-contain" />
+              <img
+                src={heroImage}
+                alt=""
+                width={IMAGE_DIM.productCard.width}
+                height={IMAGE_DIM.productCard.height}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-contain"
+              />
             </div>
           ) : null}
 

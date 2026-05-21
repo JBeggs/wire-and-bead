@@ -5,6 +5,7 @@ import { Article } from '@/lib/types'
 import { Calendar, User, ArrowLeft, Clock } from 'lucide-react'
 import { getCompany } from '@/lib/company'
 import { resolveLocale } from '@/lib/locale'
+import { getArticleHeroImageUrl, IMAGE_DIM } from '@/lib/image-utils'
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>
@@ -44,11 +45,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       {/* Article Header */}
       <article>
-        {article.featured_media?.file_url && (
+        {(article.featured_media?.file_url || article.social_image?.file_url) && (
           <div className="w-full h-64 md:h-96 relative">
             <img
-              src={article.featured_media.file_url}
+              src={getArticleHeroImageUrl(article)}
               alt={article.title}
+              width={IMAGE_DIM.articleCard.width}
+              height={IMAGE_DIM.articleCard.height}
+              fetchPriority="high"
+              decoding="async"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

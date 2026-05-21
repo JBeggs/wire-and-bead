@@ -77,7 +77,8 @@ export default function SafeImage({
           src={resolved!}
           alt={alt}
           onError={() => setFailed(true)}
-          loading={loading ?? 'lazy'}
+          loading={_priority ? 'eager' : (loading ?? 'lazy')}
+          fetchPriority={_priority ? 'high' : undefined}
           decoding={decoding ?? 'async'}
           className={[
             fill ? 'absolute inset-0 h-full w-full' : 'h-full w-full',

@@ -12,6 +12,7 @@
  */
 
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { ensureAbsoluteImageUrl } from './image-utils'
 import { FALLBACK_COMPANY, companyMonogram, type Company } from './company-shared'
 import { getSiteSettingsMap } from './site-settings'
@@ -36,11 +37,7 @@ function normaliseImageUrl(v: unknown): string | null {
   return null
 }
 
-/**
- * Fetch the active company record. Server-only.
- * Always returns a valid `Company`; degrades to `FALLBACK_COMPANY` on error.
- */
-export async function getCompany(): Promise<Company> {
+async function fetchCompanyUncached(): Promise<Company> {
   try {
     const map = await getSiteSettingsMap()
 
@@ -72,4 +69,18 @@ export async function getCompany(): Promise<Company> {
     console.error('[getCompany] failed:', err)
     return FALLBACK_COMPANY
   }
+}
+
+const companySlug = process.env.NEXT_PUBLIC_COMPANY_SLUG || 'default'
+
+const getCompanyCached = unstable_cache(fetchCompanyUncached, ['company', companySlug], {
+  revalidate: 300,
+})
+
+/**
+ * Fetch the active company record. Server-only.
+ * Always returns a valid `Company`; degrades to `FALLBACK_COMPANY` on error.
+ */
+export async function getCompany(): Promise<Company> {
+  return getCompanyCached()
 }

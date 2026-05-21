@@ -12,6 +12,7 @@ import { formatCartCountdown, getCartItemImages, getCartItemKey, getItemMinQuant
 import { isBundleProduct } from '@/lib/product-utils'
 import { getProductCardImages } from '@/lib/image-utils'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import { IMAGE_DIM } from '@/lib/image-utils'
 
 const DELIVERY_GROUP_STORAGE_KEY = 'deliveryGroupMapV1'
 const DELIVERY_GROUP_TTL_MS = 6 * 60 * 60 * 1000
@@ -80,7 +81,10 @@ function ItemImage({ item }: { item: CartItem }) {
             <img
               src={url}
               alt={i === 0 ? item.product_name || 'Product' : ''}
+              width={IMAGE_DIM.cartThumb.width}
+              height={IMAGE_DIM.cartThumb.height}
               loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
               onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
             />
@@ -95,6 +99,10 @@ function ItemImage({ item }: { item: CartItem }) {
       <img
         src={mainImage}
         alt={item.product_name || 'Product'}
+        width={IMAGE_DIM.cartThumb.width}
+        height={IMAGE_DIM.cartThumb.height}
+        loading="lazy"
+        decoding="async"
         className="h-24 w-24 flex-shrink-0 object-cover rounded-lg"
         onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
       />

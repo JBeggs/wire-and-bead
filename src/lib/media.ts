@@ -4,7 +4,7 @@
  * placeholder blur data URLs.
  */
 
-import { ensureAbsoluteImageUrl, extractImageUrl } from './image-utils'
+import { extractImageUrl, getPublicImageUrl } from './image-utils'
 
 /**
  * Resolve any media reference (string, `{url}`, `{file_url}`, `{media}`) to
@@ -16,7 +16,7 @@ export function resolveMediaUrl(
 ): string | null {
   const raw = extractImageUrl(v)
   if (!raw) return null
-  return ensureAbsoluteImageUrl(raw)
+  return getPublicImageUrl(raw)
 }
 
 /**

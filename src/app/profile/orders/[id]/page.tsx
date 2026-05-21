@@ -16,7 +16,7 @@ import {
   Phone,
   ExternalLink,
 } from 'lucide-react'
-import { ensureAbsoluteImageUrl } from '@/lib/image-utils'
+import { getPublicImageUrl, IMAGE_DIM } from '@/lib/image-utils'
 
 interface OrderItem {
   id: string
@@ -344,9 +344,12 @@ export default function CustomerOrderDetailPage() {
                       {item.bundle_images.slice(0, 4).map((url, i) => (
                         <div key={`${url}-${i}`} className="aspect-square overflow-hidden rounded bg-white border border-gray-200">
                           <img
-                            src={ensureAbsoluteImageUrl(url)}
+                            src={getPublicImageUrl(url)}
                             alt=""
+                            width={IMAGE_DIM.cartThumb.width}
+                            height={IMAGE_DIM.cartThumb.height}
                             loading="lazy"
+                            decoding="async"
                             className="h-full w-full object-cover"
                             onError={(e) => { (e.target as HTMLImageElement).src = '/images/products/default.svg' }}
                           />
@@ -354,7 +357,15 @@ export default function CustomerOrderDetailPage() {
                       ))}
                     </div>
                   ) : item.product_image ? (
-                    <img src={ensureAbsoluteImageUrl(item.product_image)} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={getPublicImageUrl(item.product_image)}
+                      alt=""
+                      width={IMAGE_DIM.cartThumb.width}
+                      height={IMAGE_DIM.cartThumb.height}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
                       <Package className="w-8 h-8" />
