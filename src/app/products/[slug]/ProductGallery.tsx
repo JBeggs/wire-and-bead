@@ -3,18 +3,20 @@
 import { useState } from 'react'
 import { Product } from '@/lib/types'
 import { Clock, Sparkles } from 'lucide-react'
-import { getProductBundleImages } from '@/lib/image-utils'
+import { getProductBundleImages, getProductGalleryThumbImages } from '@/lib/image-utils'
 
 interface ProductGalleryProps {
   product: Product
 }
 
 export default function ProductGallery({ product }: ProductGalleryProps) {
-  const allImages = getProductBundleImages(product)
-  const [activeImage, setActiveImage] = useState(allImages[0] || '')
+  const fullImages = getProductBundleImages(product)
+  const thumbImages = getProductGalleryThumbImages(fullImages, product)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const activeImage = fullImages[activeIndex] ?? fullImages[0] ?? ''
   const isVintage = Array.isArray(product.tags) && product.tags.some(t => (typeof t === 'string' ? t : t.name) === 'vintage')
 
-  if (allImages.length === 0) {
+  if (fullImages.length === 0) {
     return (
       <div className="w-full h-96 bg-gray-100 rounded-2xl flex items-center justify-center border border-gray-200">
         {isVintage ? (
@@ -25,8 +27,6 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
       </div>
     )
   }
-
-  const displayImages = allImages
 
   return (
     <div className="space-y-4">
@@ -48,21 +48,22 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         </div>
       </div>
 
-      {/* Thumbnails — wrap (parent caps image count via getProductBundleImages) */}
-      {displayImages.length > 1 && (
+      {/* Thumbnails — small strip uses thumb URLs; click swaps main full image */}
+      {fullImages.length > 1 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {displayImages.map((img, index) => (
+          {fullImages.map((full, index) => (
             <button
               key={index}
-              onClick={() => setActiveImage(img)}
+              type="button"
+              onClick={() => setActiveIndex(index)}
               className={`aspect-square rounded-lg overflow-hidden border-2 bg-gray-50 transition-all ${
-                activeImage === img 
-                  ? 'border-vintage-primary shadow-md scale-95' 
+                activeIndex === index
+                  ? 'border-vintage-primary shadow-md scale-95'
                   : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100'
               }`}
             >
               <img
-                src={img}
+                src={thumbImages[index] || full}
                 alt={`${product.name} thumbnail ${index + 1}`}
                 loading="lazy"
                 decoding="async"

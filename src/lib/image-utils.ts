@@ -128,6 +128,27 @@ export function getArticleImageUrl(
   return ARTICLE_IMAGE_PLACEHOLDER
 }
 
+/** Insert `-thumb` before the file extension (matches backend thumb_path_for). */
+export function deriveThumbUrlFromFull(url: string): string {
+  const raw = (url || '').trim()
+  if (!raw) return ''
+  const qIdx = raw.indexOf('?')
+  const base = qIdx >= 0 ? raw.slice(0, qIdx) : raw
+  const query = qIdx >= 0 ? raw.slice(qIdx) : ''
+  const slash = base.lastIndexOf('/')
+  const head = slash >= 0 ? base.slice(0, slash + 1) : ''
+  const name = slash >= 0 ? base.slice(slash + 1) : base
+  const dot = name.lastIndexOf('.')
+  if (dot <= 0) {
+    if (name.endsWith('-thumb')) return raw
+    return `${head}${name}-thumb${query}`
+  }
+  const stem = name.slice(0, dot)
+  const ext = name.slice(dot)
+  if (stem.endsWith('-thumb')) return raw
+  return `${head}${stem}-thumb${ext}${query}`
+}
+
 /** Prefer thumbnail URL for card/small views; fall back to full image. */
 export function resolveCardImageUrl(full?: string | null, thumbnail?: string | null): string {
   const thumb = (thumbnail || '').trim()
@@ -154,6 +175,36 @@ export function getProductCardImages(product: ProductCardLike): string[] {
   const mainThumb = (product.image_thumbnail || '').trim()
   if (mainThumb) return [ensureAbsoluteImageUrl(mainThumb)]
   return getProductBundleImages(product)
+}
+
+/**
+ * Thumbnail strip URLs aligned with getProductBundleImages() order (product detail gallery).
+ * Prefers API image_thumbnails (same order as full images); falls back per index.
+ */
+export function getProductGalleryThumbImages(
+  fullImages: string[],
+  product: ProductCardLike | null | undefined,
+): string[] {
+  if (!fullImages.length) return []
+  const apiThumbs = Array.isArray(product?.image_thumbnails)
+    ? product.image_thumbnails
+        .filter((u): u is string => typeof u === 'string' && !!u.trim())
+        .map((u) => ensureAbsoluteImageUrl(u.trim()))
+    : []
+  const mainThumb = (product?.image_thumbnail || '').trim()
+
+  if (apiThumbs.length === fullImages.length) {
+    return apiThumbs
+  }
+
+  return fullImages.map((full, index) => {
+    const fromApi = apiThumbs[index]
+    if (fromApi) return fromApi
+    if (index === 0 && mainThumb) return ensureAbsoluteImageUrl(mainThumb)
+    const derived = deriveThumbUrlFromFull(full)
+    if (derived && derived !== full) return ensureAbsoluteImageUrl(derived)
+    return full
+  })
 }
 
 function pickArticleCardImageRaw(article?: {

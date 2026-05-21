@@ -1,6 +1,11 @@
 import type { Cart, CartItem } from './types'
 import { formatCountdown, getMinQuantity, getStockQuantity, isBundleProduct } from './product-utils'
-import { ensureAbsoluteImageUrl, MAX_BUNDLE_PRODUCT_IMAGES } from './image-utils'
+import {
+  ensureAbsoluteImageUrl,
+  getProductCardImages,
+  getProductGalleryThumbImages,
+  MAX_BUNDLE_PRODUCT_IMAGES,
+} from './image-utils'
 
 export const COURIER_GUY_SLUGS = new Set(['temu', 'aliexpress', 'ubuy', 'gumtree'])
 export const OTHER_GROUP = '__other__'
@@ -37,10 +42,25 @@ export function getCartItemImages(item: CartItem): string[] {
     .map((img: unknown) => (typeof img === 'string' ? img : (img as { url?: string })?.url || ''))
     .filter(Boolean) as string[]
   const main = item.product_image || item.product?.image || ''
-  const raw = (item.is_bundle && parsedBundleImages.length > 0)
+  const rawFull = (item.is_bundle && parsedBundleImages.length > 0)
     ? parsedBundleImages
     : [main, ...parsedBundleImages].filter(Boolean)
-  return raw.map(ensureAbsoluteImageUrl).slice(0, MAX_BUNDLE_PRODUCT_IMAGES)
+  const fullUrls = rawFull.map(ensureAbsoluteImageUrl).slice(0, MAX_BUNDLE_PRODUCT_IMAGES)
+  const nested = item.product as
+    | { image?: string; images?: unknown; image_thumbnail?: string; image_thumbnails?: string[] }
+    | undefined
+  const productLike = {
+    image: item.product_image || nested?.image,
+    images: nested?.images,
+    image_thumbnail: nested?.image_thumbnail,
+    image_thumbnails: nested?.image_thumbnails,
+  }
+  return getProductGalleryThumbImages(fullUrls, productLike)
+}
+
+/** Thumbnail URLs for cart/checkout line items (alias for clarity at call sites). */
+export function getCartItemThumbImages(item: CartItem): string[] {
+  return getCartItemImages(item)
 }
 
 export function isTimedCartItem(item: CartItem): boolean {

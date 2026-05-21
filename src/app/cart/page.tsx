@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Clock, Sparkles, Package, TimerReset, Truck, Shield } from 'lucide-react'
 import { formatCartCountdown, getCartItemImages, getCartItemKey, getItemMinQuantity, getItemStockQuantity, groupCartItems, normalizeCartResponse, OTHER_GROUP } from '@/lib/cart-utils'
 import { isBundleProduct } from '@/lib/product-utils'
-import { getProductBundleImages } from '@/lib/image-utils'
+import { getProductCardImages } from '@/lib/image-utils'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 const DELIVERY_GROUP_STORAGE_KEY = 'deliveryGroupMapV1'
@@ -142,9 +142,9 @@ export default function CartPage() {
               if (!productId) return item
               const productResponse = await ecommerceApi.products.get(String(productId)) as any
               const product = productResponse?.data ?? productResponse
-              const images = getProductBundleImages(product)
+              const images = getProductCardImages(product)
               if (images.length > 0) {
-                return { ...item, bundle_images: images, product: { ...(item.product || {}), image: product?.image || item.product?.image } as any }
+                return { ...item, bundle_images: images, product: { ...(item.product || {}), ...product, image: product?.image || item.product?.image } as any }
               }
             } catch {
               // Ignore enrichment failures and keep original item.
