@@ -28,10 +28,7 @@ export function resolveArticleAuthorIdFromArticle(article: ArticleAuthorFields):
   )
 }
 
-export function resolveArticleAuthorLabel(article: ArticleAuthorFields): string | null {
-  const id = resolveArticleAuthorIdFromArticle(article)
-  if (!id) return null
-
+export function resolveArticleAuthorLabel(article: ArticleAuthorFields): string {
   const flat = article.author_name?.trim()
   if (flat) return flat
 
@@ -54,7 +51,10 @@ export function resolveArticleAuthorLabel(article: ArticleAuthorFields): string 
     .trim()
   if (combined) return combined
 
-  return `Author ${id}`
+  const id = resolveArticleAuthorIdFromArticle(article)
+  if (id) return `Author ${id}`
+
+  return 'Staff Writer'
 }
 
 /** Build sorted author options for admin multi-select from article list payloads. */

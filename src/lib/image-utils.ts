@@ -101,3 +101,48 @@ export function getProductBundleImages(product: ProductLike): string[] {
   const out = result.length > 0 ? result : [DEFAULT_PLACEHOLDER]
   return out.slice(0, MAX_BUNDLE_PRODUCT_IMAGES)
 }
+
+/** Placeholder when an article has no featured/social image. */
+export const ARTICLE_IMAGE_PLACEHOLDER = DEFAULT_PLACEHOLDER
+
+function pickArticleShareImageRaw(article?: {
+  social_image?: { file_url?: string | null } | null
+  featured_media?: { file_url?: string | null } | null
+} | null): string | null {
+  const social = article?.social_image?.file_url?.trim()
+  if (social) return social
+  const featured = article?.featured_media?.file_url?.trim()
+  if (featured) return featured
+  return null
+}
+
+/** Image URL for article cards/heroes (social image, featured media, or placeholder). */
+export function getArticleImageUrl(
+  article?: {
+    social_image?: { file_url?: string | null } | null
+    featured_media?: { file_url?: string | null } | null
+  } | null,
+): string {
+  const raw = pickArticleShareImageRaw(article || undefined)
+  if (raw) return ensureAbsoluteImageUrl(raw)
+  return ARTICLE_IMAGE_PLACEHOLDER
+}
+
+/** Absolute Open Graph image URLs for article metadata. */
+export function getArticleOpenGraphImageUrls(
+  article?: {
+    social_image?: { file_url?: string | null } | null
+    featured_media?: { file_url?: string | null } | null
+  } | null,
+): string[] {
+  const raw = pickArticleShareImageRaw(article || undefined)
+  if (raw) {
+    return [ensureAbsoluteImageUrl(raw)]
+  }
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '')
+  if (site) {
+    return [`${site}${ARTICLE_IMAGE_PLACEHOLDER}`]
+  }
+  return []
+}
+

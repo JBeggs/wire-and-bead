@@ -94,6 +94,10 @@ export interface Article {
   category?: Category
   tags?: Tag[]
   featured_media?: Media
+  social_image?: Media
+  author_name?: string
+  seo_title?: string
+  seo_description?: string
 }
 
 // Product for e-commerce

@@ -94,18 +94,32 @@ export function filterArticlesByDisplaySettings<
 
   if (categoryIds.length > 0) {
     const allowed = new Set(categoryIds)
-    result = result.filter((a) => {
-      const cid = resolveArticleCategoryId(a)
-      return cid !== null && allowed.has(cid)
-    })
+    const applicable = new Set(
+      result
+        .map((a) => resolveArticleCategoryId(a))
+        .filter((id): id is string => id !== null && allowed.has(id)),
+    )
+    if (applicable.size > 0) {
+      result = result.filter((a) => {
+        const cid = resolveArticleCategoryId(a)
+        return cid !== null && applicable.has(cid)
+      })
+    }
   }
 
   if (authorIds.length > 0) {
     const allowed = new Set(authorIds)
-    result = result.filter((a) => {
-      const aid = resolveArticleAuthorIdFromArticle(a)
-      return aid !== null && allowed.has(aid)
-    })
+    const applicable = new Set(
+      result
+        .map((a) => resolveArticleAuthorIdFromArticle(a))
+        .filter((id): id is string => id !== null && allowed.has(id)),
+    )
+    if (applicable.size > 0) {
+      result = result.filter((a) => {
+        const aid = resolveArticleAuthorIdFromArticle(a)
+        return aid !== null && applicable.has(aid)
+      })
+    }
   }
 
   if (scope === 'home') {
