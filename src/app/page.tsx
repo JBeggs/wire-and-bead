@@ -7,7 +7,7 @@ import {
   getArticleDisplaySettings,
 } from '@/lib/article-display-settings'
 import HomeArticlesSection from '@/components/home/HomeArticlesSection'
-import { Article, Product } from '@/lib/types'
+import { Product } from '@/lib/types'
 import ProductCard from '@/components/products/ProductCard'
 import SafeImage from '@/components/media/SafeImage'
 import { getCompany, type Company } from '@/lib/company'

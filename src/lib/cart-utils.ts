@@ -2,7 +2,6 @@ import type { Cart, CartItem } from './types'
 import { formatCountdown, getMinQuantity, getStockQuantity, isBundleProduct } from './product-utils'
 import {
   ensureAbsoluteImageUrl,
-  getProductCardImages,
   getProductGalleryThumbImages,
   MAX_BUNDLE_PRODUCT_IMAGES,
 } from './image-utils'
