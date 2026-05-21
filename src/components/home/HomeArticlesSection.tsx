@@ -5,7 +5,7 @@ import {
   resolveArticleAuthorLabel,
   type ArticleAuthorFields,
 } from '@/lib/article-author-options'
-import { getArticleImageUrl } from '@/lib/image-utils'
+import { getArticleCardImageUrl } from '@/lib/image-utils'
 
 export default function HomeArticlesSection({
   articles,
@@ -40,7 +40,7 @@ export default function HomeArticlesSection({
                 className="card group overflow-hidden"
               >
                 <img
-                  src={getArticleImageUrl(article)}
+                  src={getArticleCardImageUrl(article)}
                   alt={article.title}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />

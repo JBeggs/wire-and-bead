@@ -9,7 +9,7 @@ import { ecommerceApi } from '@/lib/api'
 import { useToast } from '@/contexts/ToastContext'
 import { useRouter } from 'next/navigation'
 import { formatCountdown, getMinQuantity, isBundleProduct, isTimedProduct } from '@/lib/product-utils'
-import { getProductBundleImages } from '@/lib/image-utils'
+import { getProductCardImages } from '@/lib/image-utils'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import HomeProductQuickModal from '@/components/home/HomeProductQuickModal'
 
@@ -71,7 +71,7 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
   const isBundle = isBundleProduct(product)
   const isTimed = isTimedProduct(product)
   const minQty = getMinQuantity(product)
-  const bundleImages = getProductBundleImages(product)
+  const bundleImages = getProductCardImages(product)
   const mainImage = bundleImages[0]
   const showBundleGrid = isBundle && bundleImages.length > 1
   const bundleDisplayUrls = showBundleGrid ? bundleImages.slice(0, 4) : []

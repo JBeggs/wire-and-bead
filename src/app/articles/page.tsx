@@ -5,7 +5,7 @@ import {
   getArticleDisplaySettings,
 } from '@/lib/article-display-settings'
 import { Article } from '@/lib/types'
-import { getArticleImageUrl } from '@/lib/image-utils'
+import { getArticleCardImageUrl } from '@/lib/image-utils'
 import { resolveArticleAuthorLabel } from '@/lib/article-author-options'
 import { Calendar, User, ArrowRight, Search, Newspaper } from 'lucide-react'
 import PageHero from '@/components/hero/PageHero'
@@ -145,7 +145,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
               {articles.map((article: Article) => (
                 <Link key={article.id} href={`/articles/${article.slug}`} className="card group overflow-hidden">
                   <img
-                    src={getArticleImageUrl(article)}
+                    src={getArticleCardImageUrl(article)}
                     alt={article.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />
