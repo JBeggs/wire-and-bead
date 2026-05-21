@@ -47,15 +47,12 @@ export function getCartItemImages(item: CartItem): string[] {
     : [main, ...parsedBundleImages].filter(Boolean)
   const fullUrls = rawFull.map(ensureAbsoluteImageUrl).slice(0, MAX_BUNDLE_PRODUCT_IMAGES)
   const nested = item.product as
-    | { image?: string; images?: unknown; image_thumbnail?: string; image_thumbnails?: string[] }
+    | { image_thumbnail?: string | null; image_thumbnails?: string[] | null }
     | undefined
-  const productLike = {
-    image: item.product_image || nested?.image,
-    images: nested?.images,
+  return getProductGalleryThumbImages(fullUrls, {
     image_thumbnail: nested?.image_thumbnail,
     image_thumbnails: nested?.image_thumbnails,
-  }
-  return getProductGalleryThumbImages(fullUrls, productLike)
+  })
 }
 
 /** Thumbnail URLs for cart/checkout line items (alias for clarity at call sites). */
