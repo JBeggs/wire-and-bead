@@ -6,6 +6,10 @@ import { render, screen } from '@testing-library/react';
 import ProductCard from './ProductCard';
 import type { Product } from '@/lib/types';
 
+/** Inline image avoids jsdom network fetches that can exceed the 5s test timeout */
+const TEST_IMAGE =
+  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ profile: { role: 'user' } }),
 }));
@@ -51,10 +55,10 @@ describe('ProductCard', () => {
   });
 
   it('renders product image when provided', () => {
-    const product = { ...baseProduct, image: 'https://example.com/product.jpg' };
+    const product = { ...baseProduct, image: TEST_IMAGE };
     render(<ProductCard product={product} />);
     const img = screen.getByRole('img', { name: 'Test Product' });
-    expect(img).toHaveAttribute('src', 'https://example.com/product.jpg');
+    expect(img).toHaveAttribute('src', TEST_IMAGE);
   });
 
   it('shows Vintage tag when product has vintage tag', () => {
