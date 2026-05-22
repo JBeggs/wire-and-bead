@@ -62,20 +62,32 @@ export function isProxiableMediaUrl(url: string): boolean {
 /** Browser-facing URL: same-origin /api/media when src is backend media. */
 export function proxyMediaUrl(absoluteUrl: string): string {
   if (!absoluteUrl || !isProxiableMediaUrl(absoluteUrl)) return absoluteUrl
-  const site = getPublicSiteOrigin()
-  if (!site) return absoluteUrl
   let mediaUrl = absoluteUrl
   if (!mediaUrl.startsWith('http')) {
     mediaUrl = `${getBackendOrigin()}${mediaUrl.startsWith('/') ? mediaUrl : `/${mediaUrl}`}`
   }
-  const storefront = new URL(site)
   try {
-    const imageUrl = new URL(mediaUrl)
-    if (imageUrl.hostname === storefront.hostname) return absoluteUrl
+    const site = getPublicSiteOrigin()
+    if (site) {
+      const storefront = new URL(site)
+      const imageUrl = new URL(mediaUrl)
+      if (imageUrl.hostname === storefront.hostname) return absoluteUrl
+    }
   } catch {
     return absoluteUrl
   }
-  return `${site}/api/media?src=${encodeURIComponent(mediaUrl)}`
+  // Relative URL so images work on production alias, preview, and custom domains
+  // (absolute URLs baked at build time point at VERCEL_URL and break with SSO previews).
+  return `/api/media?src=${encodeURIComponent(mediaUrl)}`
+}
+
+/** Absolute proxied URL for Open Graph / metadata (needs canonical site origin). */
+export function absoluteProxyMediaUrl(absoluteUrl: string): string {
+  const relative = proxyMediaUrl(absoluteUrl)
+  if (!relative.startsWith('/api/media')) return relative
+  const site = getPublicSiteOrigin()
+  if (!site) return absoluteUrl
+  return `${site.replace(/\/$/, '')}${relative}`
 }
 
 export const MEDIA_PROXY_CACHE_PAGE =
