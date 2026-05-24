@@ -5,6 +5,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ecommerceApi, newsApi, getApiErrorMessage } from '@/lib/api'
 import { Order, IntegrationSettings, IntegrationSettingsUpdatePayload } from '@/lib/types'
 import { useToast } from '@/contexts/ToastContext'
+import {
+  CUSTOM_CONTACT_EMAIL_SETTING,
+  PLATFORM_CONTACT_EMAIL,
+  isCustomContactEmailEnabled,
+} from '@/lib/platform-contact-email'
 import { Package, User, Calendar, MapPin, ChevronRight, Loader2, Save, Building2, Clock, Settings, CreditCard, Truck, Eye, EyeOff, UserCircle, ShoppingBag, Globe, Zap } from 'lucide-react'
 import Link from 'next/link'
 
@@ -79,6 +84,7 @@ export default function ProfilePage() {
   const [updatingCompany, setUpdatingCompany] = useState(false)
   const [siteSettings, setSiteSettings] = useState<Record<string, { id: string; value: string; type: string }>>({})
   const [siteSettingsValues, setSiteSettingsValues] = useState<Record<string, string>>({})
+  const [customContactEmailEnabled, setCustomContactEmailEnabled] = useState(false)
   const [updatingSiteSettings, setUpdatingSiteSettings] = useState(false)
   const [integrationSettings, setIntegrationSettings] = useState<IntegrationSettings | null>(null)
   const [integrationForm, setIntegrationForm] = useState<IntegrationSettingsUpdatePayload & Record<string, unknown>>({})
@@ -197,6 +203,7 @@ export default function ProfilePage() {
         })
         setSiteSettings(byKey)
         setSiteSettingsValues(vals)
+        setCustomContactEmailEnabled(isCustomContactEmailEnabled(vals))
       }).catch(() => {})
     }
   }, [companyId])
@@ -294,9 +301,30 @@ export default function ProfilePage() {
     if (!companyId) return
     setUpdatingCompany(true)
     try {
-      const updated = await ecommerceApi.companies.update(companyId, {
+      const flagValue = customContactEmailEnabled ? 'true' : 'false'
+      const existingFlag = siteSettings[CUSTOM_CONTACT_EMAIL_SETTING]
+      if (existingFlag) {
+        if (existingFlag.value !== flagValue) {
+          await newsApi.siteSettings.update(existingFlag.id, {
+            key: CUSTOM_CONTACT_EMAIL_SETTING,
+            value: flagValue,
+            type: existingFlag.type || 'boolean',
+            description: '',
+            is_public: false,
+          })
+        }
+      } else {
+        await newsApi.siteSettings.create({
+          key: CUSTOM_CONTACT_EMAIL_SETTING,
+          value: flagValue,
+          type: 'boolean',
+          description: '',
+          is_public: false,
+        })
+      }
+
+      const companyPayload: Record<string, unknown> = {
         name: companyForm.name.trim(),
-        email: companyForm.email.trim(),
         phone: companyForm.phone || '',
         website: companyForm.website || '',
         address_street: companyForm.address_street || '',
@@ -324,7 +352,20 @@ export default function ProfilePage() {
           }
           return parsed
         })(),
-      })
+      }
+      if (customContactEmailEnabled) {
+        companyPayload.email = companyForm.email.trim()
+      }
+      const updated = await ecommerceApi.companies.update(companyId, companyPayload)
+      setSiteSettingsValues((prev) => ({ ...prev, [CUSTOM_CONTACT_EMAIL_SETTING]: flagValue }))
+      setSiteSettings((prev) => ({
+        ...prev,
+        [CUSTOM_CONTACT_EMAIL_SETTING]: {
+          id: existingFlag?.id ?? prev[CUSTOM_CONTACT_EMAIL_SETTING]?.id ?? '',
+          value: flagValue,
+          type: 'boolean',
+        },
+      }))
       const data = (updated as any)?.data ?? updated
       setCompany(data)
       if (data && typeof (data as any).name === 'string') {
@@ -785,16 +826,39 @@ export default function ProfilePage() {
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold uppercase tracking-widest text-text-muted">Contact email</label>
-                        <input
-                          type="email"
-                          autoComplete="email"
-                          value={companyForm.email}
-                          onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
-                          className="form-input"
-                          placeholder="hello@yourstore.com"
-                          required
-                        />
-                        <p className="text-xs text-text-muted">Public storefront contact — separate from your account/login email</p>
+                        {!customContactEmailEnabled ? (
+                          <>
+                            <input
+                              type="email"
+                              readOnly
+                              value={PLATFORM_CONTACT_EMAIL}
+                              className="form-input bg-gray-50"
+                            />
+                            <p className="text-xs text-text-muted">Temporary platform contact email shown on your storefront.</p>
+                          </>
+                        ) : (
+                          <>
+                            <input
+                              type="email"
+                              autoComplete="email"
+                              value={companyForm.email}
+                              onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+                              className="form-input"
+                              placeholder="hello@yourstore.com"
+                              required
+                            />
+                            <p className="text-xs text-text-muted">Public storefront contact — separate from your account/login email</p>
+                          </>
+                        )}
+                        <label className="flex items-center gap-2 mt-2 text-sm text-text-muted cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={customContactEmailEnabled}
+                            onChange={(e) => setCustomContactEmailEnabled(e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          Use my own contact email
+                        </label>
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold uppercase tracking-widest text-text-muted">Phone</label>

@@ -16,6 +16,7 @@ import { unstable_cache } from 'next/cache'
 import { ensureAbsoluteImageUrl } from './image-utils'
 import { FALLBACK_COMPANY, companyMonogram, type Company } from './company-shared'
 import { getSiteSettingsMap } from './site-settings'
+import { resolvePublicContactEmail } from './platform-contact-email'
 
 export { FALLBACK_COMPANY, companyMonogram }
 export type { Company }
@@ -50,7 +51,7 @@ async function fetchCompanyUncached(): Promise<Company> {
       ogImageUrl: normaliseImageUrl(map.og_image ?? map.site_og_image),
       brandColor: coerceString(map.brand_color) || null,
       contact: {
-        email: coerceString(map.contact_email),
+        email: resolvePublicContactEmail(coerceString(map.contact_email), map),
         phone: coerceString(map.contact_phone),
         address: coerceString(map.contact_address),
       },

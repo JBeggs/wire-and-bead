@@ -1,4 +1,5 @@
 import { serverNewsApi } from '@/lib/api-server'
+import { resolvePublicContactEmail } from '@/lib/platform-contact-email'
 import ContactForm from './ContactForm'
 import PageHero from '@/components/hero/PageHero'
 
@@ -31,7 +32,7 @@ async function getContactData() {
     }
     return {
       contact: {
-        email: settingsMap.contact_email || '',
+        email: resolvePublicContactEmail(settingsMap.contact_email || '', settingsMap),
         phone: settingsMap.contact_phone || '',
         address: settingsMap.contact_address || '',
       },

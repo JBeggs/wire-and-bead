@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useToast } from '@/contexts/ToastContext'
+import { submitContactLead } from '@/lib/submit-contact-lead'
 import { Mail, Phone, MapPin, Send } from 'lucide-react'
 
 interface ContactFormProps {
@@ -27,15 +28,20 @@ export default function ContactForm({ contact, businessHours }: ContactFormProps
     message: '',
   })
   const [loading, setLoading] = useState(false)
-  const { showSuccess } = useToast()
+  const { showSuccess, showError } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    showSuccess('Thank you for your message! We\'ll get back to you soon.')
-    setFormData({ name: '', email: '', subject: '', message: '' })
-    setLoading(false)
+    try {
+      await submitContactLead(formData)
+      showSuccess('Thank you for your message! We\'ll get back to you soon.')
+      setFormData({ name: '', email: '', subject: '', message: '' })
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to send message. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const formatAddress = (addr: string) => {
