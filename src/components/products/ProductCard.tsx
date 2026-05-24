@@ -257,17 +257,20 @@ export default function ProductCard({ product, homeQuickView = false }: ProductC
         <div className="p-4 flex-1 flex flex-col">
           <Link href={`/products/${product.slug}`} className="group/title" prefetch={false}>
             <h3
-              className={`font-semibold text-text line-clamp-1 transition-colors ${
+              className={`font-semibold text-text line-clamp-2 leading-snug min-h-[2.75rem] transition-colors ${
                 isVintage
                   ? 'group-hover/title:text-vintage-primary group-hover:text-vintage-primary'
                   : 'group-hover/title:text-modern-primary group-hover:text-modern-primary'
               }`}
+              title={product.name}
             >
               {product.name}
             </h3>
           </Link>
-          {product.description && (
-            <p className="text-sm text-text-muted mt-1 line-clamp-2 min-h-[40px]">{product.description}</p>
+          {(product.short_description || product.description) && (
+            <p className="text-sm text-text-muted mt-1 line-clamp-2 min-h-[2.5rem]">
+              {product.short_description || product.description}
+            </p>
           )}
           {isTimed && countdown && (
             <p className={`mt-2 text-sm font-semibold ${countdown === 'Expired' ? 'text-red-600' : 'text-amber-700'}`}>
