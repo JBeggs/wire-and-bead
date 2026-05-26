@@ -31,12 +31,8 @@ function backendOriginForMedia(): string {
   return apiBase.replace(/\/api\/?$/, '').replace(/\/$/, '') || 'https://3pillars.pythonanywhere.com'
 }
 
-/**
- * WhatsApp/link previews often work more reliably when og:image is served from the
- * same host as the page. Proxy API /media/* through /api/media on the storefront.
- */
-function sameOriginOgImageUrl(directImageUrl: string): string {
-  return absoluteProxyMediaUrl(directImageUrl)
+function sameOriginOgImageUrl(directImageUrl: string, siteOrigin?: string | null): string {
+  return absoluteProxyMediaUrl(directImageUrl, siteOrigin)
 }
 
 /** Public site origin (https, no trailing slash). Used for absolute OG URLs and optional og:url. */
@@ -63,20 +59,21 @@ function isGalleryPlaceholderUrl(url: string): boolean {
   }
 }
 
+function fallbackOgImagePath(): string {
+  return '/api/og-default'
+}
+
 function fallbackOgImageUrl(siteOrigin?: string | null): string {
   const site = siteOrigin || publicSiteOrigin()
   if (site) {
-    return `${site.replace(/\/$/, '')}/api/og-default`
+    return `${site.replace(/\/$/, '')}${fallbackOgImagePath()}`
   }
   return `${backendOriginForMedia()}/og-image.jpg`
 }
 
-/**
- * Resolve one product image URL to an absolute URL suitable for og:image (WhatsApp / crawlers).
- */
 function absolutizeProductImageForOg(url: string): string {
   const u = (url || '').trim()
-  if (!u) return fallbackOgImageUrl()
+  if (!u) return ''
   if (u.startsWith('https://') || u.startsWith('http://')) return u
   const backend = backendOriginForMedia()
   if (u.startsWith('/media/')) {
@@ -93,12 +90,22 @@ function absolutizeProductImageForOg(url: string): string {
 }
 
 function absolutizeShareImageUrl(proxiedOrAbsolute: string, siteOrigin?: string | null): string {
-  if (proxiedOrAbsolute.startsWith('http://') || proxiedOrAbsolute.startsWith('https://')) {
-    return proxiedOrAbsolute
+  const site = (siteOrigin || publicSiteOrigin() || '').replace(/\/$/, '')
+  if (proxiedOrAbsolute.startsWith('/')) {
+    return site ? `${site}${proxiedOrAbsolute}` : proxiedOrAbsolute
   }
-  const site = siteOrigin || publicSiteOrigin()
-  if (site && proxiedOrAbsolute.startsWith('/')) {
-    return `${site.replace(/\/$/, '')}${proxiedOrAbsolute}`
+  if (
+    site &&
+    (proxiedOrAbsolute.startsWith('http://') || proxiedOrAbsolute.startsWith('https://'))
+  ) {
+    try {
+      const parsed = new URL(proxiedOrAbsolute)
+      if (parsed.pathname.startsWith('/api/media') || parsed.pathname.startsWith('/api/og-default')) {
+        return `${site}${parsed.pathname}${parsed.search}`
+      }
+    } catch {
+      /* keep original */
+    }
   }
   return proxiedOrAbsolute
 }
@@ -111,23 +118,32 @@ export function openGraphImageFromMediaUrl(
   const u = (url || '').trim()
   if (!u) return fallbackOgImageUrl(siteOrigin)
   return absolutizeShareImageUrl(
-    sameOriginOgImageUrl(absolutizeProductImageForOg(u)),
+    sameOriginOgImageUrl(absolutizeProductImageForOg(u), siteOrigin),
     siteOrigin,
   )
 }
 
 /**
- * Absolute URL for og:image — prefers product thumbnail, then full image.
+ * Same-origin relative path for WhatsApp share fetch (always use window.location.origin client-side).
  */
-export function buildProductOgImage(product: Product, siteOrigin?: string | null): string {
+export function buildProductShareMediaPath(product: Product): string {
   const thumb = getProductShareThumbnailRaw(product)
-  if (thumb && !isGalleryPlaceholderUrl(thumb)) {
-    return openGraphImageFromMediaUrl(thumb, siteOrigin)
+  if (!thumb || isGalleryPlaceholderUrl(thumb)) {
+    return fallbackOgImagePath()
   }
-  return fallbackOgImageUrl(siteOrigin)
+  const backend = absolutizeProductImageForOg(thumb)
+  if (!backend.startsWith('http://') && !backend.startsWith('https://')) {
+    return fallbackOgImagePath()
+  }
+  return `/api/media?src=${encodeURIComponent(backend)}`
 }
 
-/** Same thumbnail URL used for og:image and WhatsApp file share. */
+/** Absolute URL for og:image — prefers product thumbnail, then full image. */
+export function buildProductOgImage(product: Product, siteOrigin?: string | null): string {
+  return absolutizeShareImageUrl(buildProductShareMediaPath(product), siteOrigin)
+}
+
+/** @deprecated Use buildProductShareMediaPath + window.location.origin on the client. */
 export function buildProductShareImageUrl(product: Product, siteOrigin?: string | null): string {
   return buildProductOgImage(product, siteOrigin)
 }

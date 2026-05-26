@@ -99,12 +99,12 @@ export function proxyMediaUrl(absoluteUrl: string): string {
 }
 
 /** Absolute proxied URL for Open Graph / metadata (needs canonical site origin). */
-export function absoluteProxyMediaUrl(absoluteUrl: string): string {
+export function absoluteProxyMediaUrl(absoluteUrl: string, siteOrigin?: string | null): string {
   const relative = proxyMediaUrl(absoluteUrl)
   if (!relative.startsWith('/api/media')) return relative
-  const site = getPublicSiteOrigin()
+  const site = (siteOrigin || getPublicSiteOrigin() || '').replace(/\/$/, '')
   if (!site) return absoluteUrl
-  return `${site.replace(/\/$/, '')}${relative}`
+  return `${site}${relative}`
 }
 
 export const MEDIA_PROXY_CACHE_PAGE =

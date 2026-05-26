@@ -3,19 +3,24 @@
 import { useState } from 'react'
 import { Product } from '@/lib/types'
 import { useCompany } from '@/contexts/CompanyContext'
-import { openWhatsAppWithText, shareTextWithOptionalImage } from '@/lib/share-with-image'
+import {
+  openWhatsAppWithText,
+  resolveShareImageFetchUrl,
+  shareTextWithOptionalImage,
+} from '@/lib/share-with-image'
 
 interface WhatsAppShareButtonProps {
   product: Product
   /** Optional override — falls back to the active company name. */
   companyName?: string
-  shareImageUrl: string
+  /** Same-origin path e.g. /api/media?src=… — never a deployment-specific absolute URL. */
+  shareMediaPath: string
 }
 
 export default function WhatsAppShareButton({
   product,
   companyName,
-  shareImageUrl,
+  shareMediaPath,
 }: WhatsAppShareButtonProps) {
   const company = useCompany()
   const brand = companyName ?? company.name
@@ -47,12 +52,15 @@ export default function WhatsAppShareButton({
       .join('\n\n')
 
     try {
-      const shared = await shareTextWithOptionalImage(
-        msg,
-        shareImageUrl,
-        `${product.slug || 'product'}.jpg`,
-      )
-      if (shared) return
+      const imageFetchUrl = resolveShareImageFetchUrl(shareMediaPath)
+      if (imageFetchUrl) {
+        const shared = await shareTextWithOptionalImage(
+          msg,
+          imageFetchUrl,
+          `${product.slug || 'product'}.jpg`,
+        )
+        if (shared) return
+      }
     } finally {
       setSharing(false)
     }

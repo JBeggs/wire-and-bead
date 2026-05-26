@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { serverEcommerceApi } from '@/lib/api-server'
 export const dynamic = 'force-dynamic'
 import { Product } from '@/lib/types'
-import { buildProductOgImage, buildProductSeo, buildProductShareImageUrl, publicSiteOrigin } from '@/lib/product-seo'
+import { buildProductOgImage, buildProductSeo, buildProductShareMediaPath, publicSiteOrigin } from '@/lib/product-seo'
 import { getRequestSiteOrigin } from '@/lib/media-proxy'
 import { ArrowLeft, Shield, Info, Phone, FileText, Package, TimerReset, Truck } from 'lucide-react'
 import AddToCartButton from './AddToCartButton'
@@ -106,7 +106,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound()
   }
 
-  const shareImageUrl = buildProductShareImageUrl(product, siteOrigin)
+  const shareMediaPath = buildProductShareMediaPath(product)
 
   const locale = resolveLocale(company)
   const highValueThreshold = coerceSiteNumber(thresholdRaw)
@@ -244,7 +244,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
 
                 <AddToCartButton product={product} />
-                <WhatsAppShareButton product={product} shareImageUrl={shareImageUrl} />
+                <WhatsAppShareButton product={product} shareMediaPath={shareMediaPath} />
                 <ProductPrintLabelButton
                   product={product}
                   companyName={company.name}
