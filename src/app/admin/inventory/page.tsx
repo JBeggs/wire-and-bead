@@ -13,9 +13,14 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useCompany } from '@/contexts/CompanyContext'
+import ProductPrintLabelButton from '@/components/products/ProductPrintLabelButton'
+import { resolveLocale } from '@/lib/locale'
 
 export default function InventoryPage() {
   const { profile, loading: authLoading } = useAuth()
+  const company = useCompany()
+  const locale = resolveLocale(company)
   const searchParams = useSearchParams()
   const pageFromUrl = parseInt(searchParams.get('page') || '1', 10)
   const limitFromUrl = searchParams.get('limit') || '20'
@@ -496,6 +501,13 @@ export default function InventoryPage() {
                       <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
                     </a>
                   )}
+                  <ProductPrintLabelButton
+                    product={product}
+                    companyName={company.name}
+                    currency={company.currency}
+                    locale={locale}
+                    variant="icon"
+                  />
                   <Link 
                     href={`/admin/inventory/edit/${product.id}`}
                     className="p-2 text-text-muted hover:text-vintage-primary hover:bg-vintage-primary/5 rounded-lg transition-all"
