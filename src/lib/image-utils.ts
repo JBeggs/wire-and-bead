@@ -185,6 +185,25 @@ type ProductCardLike = ProductLike & {
   image_thumbnails?: string[] | null
 }
 
+/** Raw backend thumbnail URL for OG / WhatsApp share (prefers API thumb fields). */
+export function getProductShareThumbnailRaw(
+  product: ProductCardLike | null | undefined,
+): string | null {
+  if (!product) return null
+  const mainThumb = (product.image_thumbnail || '').trim()
+  if (mainThumb) return ensureAbsoluteImageUrl(mainThumb)
+  const apiThumbs = Array.isArray(product.image_thumbnails)
+    ? product.image_thumbnails.filter((u): u is string => typeof u === 'string' && !!u.trim())
+    : []
+  if (apiThumbs[0]) return ensureAbsoluteImageUrl(apiThumbs[0])
+  const main = typeof product.image === 'string' ? product.image.trim() : ''
+  if (main && main !== DEFAULT_PLACEHOLDER) return ensureAbsoluteImageUrl(main)
+  for (const cand of getProductBundleImages(product)) {
+    if (cand && cand !== DEFAULT_PLACEHOLDER) return cand
+  }
+  return null
+}
+
 /** Card/grid product images — prefer API thumbnail fields, else full images. */
 export function getProductCardImages(product: ProductCardLike): string[] {
   if (!product) return [DEFAULT_PLACEHOLDER]

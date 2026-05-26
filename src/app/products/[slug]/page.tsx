@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { serverEcommerceApi } from '@/lib/api-server'
 export const dynamic = 'force-dynamic'
 import { Product } from '@/lib/types'
-import { buildProductOgImage, buildProductSeo, publicSiteOrigin } from '@/lib/product-seo'
+import { buildProductOgImage, buildProductSeo, buildProductShareImageUrl, publicSiteOrigin } from '@/lib/product-seo'
+import { getRequestSiteOrigin } from '@/lib/media-proxy'
 import { ArrowLeft, Shield, Info, Phone, FileText, Package, TimerReset, Truck } from 'lucide-react'
 import AddToCartButton from './AddToCartButton'
 import ProductGallery from './ProductGallery'
@@ -54,7 +55,11 @@ async function getProduct(slug: string): Promise<Product | null> {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params
-  const [product, company] = await Promise.all([getProduct(slug), getCompany()])
+  const [product, company, siteOrigin] = await Promise.all([
+    getProduct(slug),
+    getCompany(),
+    getRequestSiteOrigin(),
+  ])
   const companyName = company.name
 
   if (!product) {
@@ -62,8 +67,9 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   const { title, description, keywords } = buildProductSeo(product, companyName)
-  const ogImage = buildProductOgImage(product) || company.ogImageUrl || '/api/og-default'
-  const site = publicSiteOrigin()
+  const ogImage =
+    buildProductOgImage(product, siteOrigin) || company.ogImageUrl || '/api/og-default'
+  const site = siteOrigin || publicSiteOrigin()
   const ogUrl = site ? `${site}/products/${slug}` : undefined
 
   return {
@@ -88,9 +94,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
-  const [product, company, thresholdRaw, payLabelRaw] = await Promise.all([
+  const [product, company, siteOrigin, thresholdRaw, payLabelRaw] = await Promise.all([
     getProduct(slug),
     getCompany(),
+    getRequestSiteOrigin(),
     getSiteSetting('high_value_order_threshold'),
     getSiteSetting('payment_provider_display_name'),
   ])
@@ -98,6 +105,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) {
     notFound()
   }
+
+  const shareImageUrl = buildProductShareImageUrl(product, siteOrigin)
 
   const locale = resolveLocale(company)
   const highValueThreshold = coerceSiteNumber(thresholdRaw)
@@ -235,7 +244,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
 
                 <AddToCartButton product={product} />
-                <WhatsAppShareButton product={product} />
+                <WhatsAppShareButton product={product} shareImageUrl={shareImageUrl} />
                 <ProductPrintLabelButton
                   product={product}
                   companyName={company.name}

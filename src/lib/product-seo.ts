@@ -1,5 +1,5 @@
 import type { Product } from '@/lib/types'
-import { getProductBundleImages } from '@/lib/image-utils'
+import { getProductShareThumbnailRaw } from '@/lib/image-utils'
 import { absoluteProxyMediaUrl } from '@/lib/media-proxy'
 
 type ProductSeoInput = Pick<
@@ -33,7 +33,7 @@ function backendOriginForMedia(): string {
 
 /**
  * WhatsApp/link previews often work more reliably when og:image is served from the
- * same host as the page. Proxy API /media/* through /api/og-proxy on the storefront.
+ * same host as the page. Proxy API /media/* through /api/media on the storefront.
  */
 function sameOriginOgImageUrl(directImageUrl: string): string {
   return absoluteProxyMediaUrl(directImageUrl)
@@ -63,17 +63,16 @@ function isGalleryPlaceholderUrl(url: string): boolean {
   }
 }
 
-function fallbackOgImageUrl(): string {
-  const site = publicSiteOrigin()
+function fallbackOgImageUrl(siteOrigin?: string | null): string {
+  const site = siteOrigin || publicSiteOrigin()
   if (site) {
-    return `${site}/api/og-default`
+    return `${site.replace(/\/$/, '')}/api/og-default`
   }
   return `${backendOriginForMedia()}/og-image.jpg`
 }
 
 /**
  * Resolve one product image URL to an absolute URL suitable for og:image (WhatsApp / crawlers).
- * Matches JavaMellow: API host for relative /media paths; pass-through for absolute http(s).
  */
 function absolutizeProductImageForOg(url: string): string {
   const u = (url || '').trim()
@@ -93,20 +92,42 @@ function absolutizeProductImageForOg(url: string): string {
   return `${backend}/${u}`
 }
 
+function absolutizeShareImageUrl(proxiedOrAbsolute: string, siteOrigin?: string | null): string {
+  if (proxiedOrAbsolute.startsWith('http://') || proxiedOrAbsolute.startsWith('https://')) {
+    return proxiedOrAbsolute
+  }
+  const site = siteOrigin || publicSiteOrigin()
+  if (site && proxiedOrAbsolute.startsWith('/')) {
+    return `${site.replace(/\/$/, '')}${proxiedOrAbsolute}`
+  }
+  return proxiedOrAbsolute
+}
+
+/** Absolute og:image URL for any media URL (article featured/social images, etc.). */
+export function openGraphImageFromMediaUrl(
+  url: string | null | undefined,
+  siteOrigin?: string | null,
+): string {
+  const u = (url || '').trim()
+  if (!u) return fallbackOgImageUrl(siteOrigin)
+  return absolutizeShareImageUrl(
+    sameOriginOgImageUrl(absolutizeProductImageForOg(u)),
+    siteOrigin,
+  )
+}
+
 /**
- * Absolute URL for og:image.
- * Prefer flat `product.image` (same as JavaMellow); then first non-placeholder from gallery list.
+ * Absolute URL for og:image — prefers product thumbnail, then full image.
  */
-export function buildProductOgImage(product: Product): string {
-  const flat = typeof product.image === 'string' ? product.image.trim() : ''
-  if (flat && !isGalleryPlaceholderUrl(flat)) {
-    return sameOriginOgImageUrl(absolutizeProductImageForOg(flat))
+export function buildProductOgImage(product: Product, siteOrigin?: string | null): string {
+  const thumb = getProductShareThumbnailRaw(product)
+  if (thumb && !isGalleryPlaceholderUrl(thumb)) {
+    return openGraphImageFromMediaUrl(thumb, siteOrigin)
   }
+  return fallbackOgImageUrl(siteOrigin)
+}
 
-  for (const cand of getProductBundleImages(product)) {
-    if (!cand || isGalleryPlaceholderUrl(cand)) continue
-    return sameOriginOgImageUrl(absolutizeProductImageForOg(cand))
-  }
-
-  return fallbackOgImageUrl()
+/** Same thumbnail URL used for og:image and WhatsApp file share. */
+export function buildProductShareImageUrl(product: Product, siteOrigin?: string | null): string {
+  return buildProductOgImage(product, siteOrigin)
 }
