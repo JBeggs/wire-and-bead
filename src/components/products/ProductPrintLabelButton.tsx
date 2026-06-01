@@ -335,6 +335,106 @@ function buildPrintDocument(args: {
 </html>`
 }
 
+/** Self-contained print trigger — runs inside a standalone window (not an iframe). */
+function buildAutoPrintScript(timeoutMs: number): string {
+  return `<script>
+(function(){
+  var t=${timeoutMs};
+  function wait(){
+    var imgs=[].slice.call(document.images);
+    if(!imgs.length)return Promise.resolve();
+    return Promise.all(imgs.map(function(img){
+      return Promise.race([
+        new Promise(function(r){
+          if(img.complete&&img.naturalHeight)return r();
+          img.addEventListener('load',function(){r()},{once:true});
+          img.addEventListener('error',function(){r()},{once:true});
+        }),
+        new Promise(function(r){setTimeout(r,t);})
+      ]);
+    }));
+  }
+  function go(){
+    wait().then(function(){
+      window.focus();
+      window.print();
+    });
+    window.onafterprint=function(){window.close();};
+    setTimeout(function(){try{window.close();}catch(e){}},60000);
+  }
+  if(document.readyState==='complete')go();
+  else window.addEventListener('load',go);
+})();
+</script>`
+}
+
+function htmlWithAutoPrint(html: string): string {
+  const script = buildAutoPrintScript(IMAGE_LOAD_TIMEOUT_MS)
+  if (html.includes('</body>')) {
+    return html.replace('</body>', `${script}</body>`)
+  }
+  return `${html}${script}`
+}
+
+/**
+ * Open label in a new top-level window. Android "Save as PDF" captures the
+ * printed document — iframe print preview looks fine but PDF often exports the
+ * parent storefront page instead.
+ */
+function openStandalonePrintWindow(html: string): boolean {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  const blobUrl = URL.createObjectURL(blob)
+  const printWindow = window.open(blobUrl, '_blank')
+  if (!printWindow) {
+    URL.revokeObjectURL(blobUrl)
+    return false
+  }
+  const revoke = () => URL.revokeObjectURL(blobUrl)
+  printWindow.addEventListener('load', revoke, { once: true })
+  window.setTimeout(revoke, 120_000)
+  return true
+}
+
+async function printViaHiddenIframe(html: string): Promise<void> {
+  const iframe = document.createElement('iframe')
+  iframe.setAttribute('aria-hidden', 'true')
+  iframe.style.position = 'fixed'
+  iframe.style.width = '0'
+  iframe.style.height = '0'
+  iframe.style.border = '0'
+  iframe.style.right = '0'
+  iframe.style.bottom = '0'
+  document.body.appendChild(iframe)
+
+  const doc = iframe.contentDocument || iframe.contentWindow?.document
+  if (!doc) {
+    iframe.remove()
+    return
+  }
+
+  doc.open()
+  doc.write(html)
+  doc.close()
+
+  const printAndCleanup = async () => {
+    try {
+      await waitForImages(doc, IMAGE_LOAD_TIMEOUT_MS)
+      iframe.contentWindow?.focus()
+      iframe.contentWindow?.print()
+    } finally {
+      window.setTimeout(() => iframe.remove(), 2000)
+    }
+  }
+
+  if (iframe.contentWindow?.document.readyState === 'complete') {
+    await printAndCleanup()
+  } else {
+    iframe.onload = () => {
+      void printAndCleanup()
+    }
+  }
+}
+
 function toAbsoluteFetchUrl(url: string): string {
   if (!url) return url
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
@@ -482,43 +582,10 @@ export default function ProductPrintLabelButton({
       ownerPhone: phone,
     })
 
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('aria-hidden', 'true')
-    iframe.style.position = 'fixed'
-    iframe.style.width = '0'
-    iframe.style.height = '0'
-    iframe.style.border = '0'
-    iframe.style.right = '0'
-    iframe.style.bottom = '0'
-    document.body.appendChild(iframe)
+    const printableHtml = htmlWithAutoPrint(html)
+    if (openStandalonePrintWindow(printableHtml)) return
 
-    const doc = iframe.contentDocument || iframe.contentWindow?.document
-    if (!doc) {
-      iframe.remove()
-      return
-    }
-
-    doc.open()
-    doc.write(html)
-    doc.close()
-
-    const printAndCleanup = async () => {
-      try {
-        await waitForImages(doc, IMAGE_LOAD_TIMEOUT_MS)
-        iframe.contentWindow?.focus()
-        iframe.contentWindow?.print()
-      } finally {
-        window.setTimeout(() => iframe.remove(), 2000)
-      }
-    }
-
-    if (iframe.contentWindow?.document.readyState === 'complete') {
-      await printAndCleanup()
-    } else {
-      iframe.onload = () => {
-        void printAndCleanup()
-      }
-    }
+    await printViaHiddenIframe(html)
   }, [brandColor, companyName, currency, locale, logoUrl, ownerNameProp, ownerPhone, product, tagline])
 
   if (variant === 'icon') {
