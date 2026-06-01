@@ -130,6 +130,48 @@ export function labelAccentSoft(accent: string): string {
   return 'rgba(184, 115, 51, 0.12)'
 }
 
+/** Split a product URL across up to 3 lines for label printing. */
+export function formatPrintLabelUrlLines(url: string): string[] {
+  const trimmed = url.trim()
+  if (!trimmed) return []
+
+  try {
+    const absolute = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`
+    const parsed = new URL(absolute)
+    const origin = `${parsed.protocol}//${parsed.host}`
+    const pathAndQuery = `${parsed.pathname}${parsed.search}${parsed.hash}`.replace(/^\//, '')
+
+    if (!pathAndQuery) return [origin]
+
+    const lines = [origin]
+    if (pathAndQuery.length <= 32) {
+      lines.push(pathAndQuery)
+      return lines
+    }
+
+    const segments = pathAndQuery.split('/')
+    if (segments.length >= 2) {
+      const mid = Math.ceil(segments.length / 2)
+      lines.push(segments.slice(0, mid).join('/'))
+      const tail = segments.slice(mid).join('/')
+      if (tail) lines.push(tail)
+      return lines.filter(Boolean).slice(0, 3)
+    }
+
+    const chunk = Math.ceil(pathAndQuery.length / 2)
+    lines.push(pathAndQuery.slice(0, chunk))
+    lines.push(pathAndQuery.slice(chunk))
+    return lines.filter(Boolean).slice(0, 3)
+  } catch {
+    const chunk = Math.ceil(trimmed.length / 3)
+    return [
+      trimmed.slice(0, chunk),
+      trimmed.slice(chunk, chunk * 2),
+      trimmed.slice(chunk * 2),
+    ].filter(Boolean)
+  }
+}
+
 export const PRODUCT_PRINT_LABEL_CSS = `
   .product-print-label-root * { box-sizing: border-box; }
   .product-print-label-root {
@@ -139,17 +181,20 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     print-color-adjust: exact;
     --label-media-size: 90%;
     --label-type-scale: 1;
+    /* Screen preview only — mm renders large on monitors; PDF uses 1. */
+    --label-preview-scale: 0.58;
     /* Physical units so screen preview and PDF/print render the same size. */
-    --label-fs-brand: calc(12mm * var(--label-type-scale));
-    --label-fs-tagline: calc(7mm * var(--label-type-scale));
-    --label-fs-title: calc(13mm * var(--label-type-scale));
-    --label-fs-desc: calc(13mm * var(--label-type-scale));
-    --label-fs-price: calc(17mm * var(--label-type-scale));
-    --label-fs-compare: calc(8.5mm * var(--label-type-scale));
-    --label-fs-meta: calc(9.5mm * var(--label-type-scale));
-    --label-fs-meta-label: calc(7.5mm * var(--label-type-scale));
-    --label-fs-scan: calc(13mm * var(--label-type-scale));
-    --label-fs-url: calc(11mm * var(--label-type-scale));
+    --label-fs-brand: calc(12mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-tagline: calc(7mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-title: calc(13mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-desc: calc(13mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-price: calc(17mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-compare: calc(8.5mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-meta: calc(9.5mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-meta-label: calc(7.5mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-phone: calc(12mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-scan: calc(13mm * var(--label-type-scale) * var(--label-preview-scale));
+    --label-fs-url: calc(8mm * var(--label-type-scale) * var(--label-preview-scale));
   }
   .product-print-label-root .label {
     max-width: 360px;
@@ -260,10 +305,10 @@ export const PRODUCT_PRINT_LABEL_CSS = `
   }
   .product-print-label-root .meta {
     display: block;
-    text-align: left;
-    background: #faf9f7;
-    border: 1px solid #ece8e3;
-    border-radius: 10px;
+    text-align: center;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     padding: 16px 18px;
     margin: 0 auto 12px;
     width: 90%;
@@ -272,6 +317,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     font-size: var(--label-fs-meta);
     line-height: 1.4;
     color: #5c574f;
+    text-align: center;
   }
   .product-print-label-root .meta-row + .meta-row { margin-top: 16px; }
   .product-print-label-root .meta-label {
@@ -280,17 +326,30 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     text-transform: uppercase;
     color: #8a837a;
     font-size: var(--label-fs-meta-label);
-    margin-right: 10px;
+    margin-right: 0;
+    display: block;
+    margin-bottom: 4px;
   }
   .product-print-label-root .meta-value {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     color: #141414;
     font-size: var(--label-fs-meta);
+    display: block;
   }
   .product-print-label-root .owner-name {
     font-weight: 600;
     color: #141414;
     font-size: var(--label-fs-meta);
+    display: block;
+  }
+  .product-print-label-root .meta-row-phone {
+    margin-top: 12px;
+  }
+  .product-print-label-root .meta-phone {
+    font-size: var(--label-fs-phone);
+    font-weight: 800;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: 0.02em;
   }
   .product-print-label-root .footer {
     padding: 14px 18px 16px;
@@ -326,11 +385,18 @@ export const PRODUCT_PRINT_LABEL_CSS = `
   .product-print-label-root .url {
     font-size: var(--label-fs-url);
     color: #8a837a;
-    word-break: break-all;
-    line-height: 1.4;
+    line-height: 1.35;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     width: 90%;
     margin: 12px auto 0;
+    padding-bottom: 6mm;
+  }
+  .product-print-label-root .url-line {
+    display: block;
+    word-break: break-all;
+  }
+  .product-print-label-root .page-qr .footer {
+    padding-bottom: 10mm;
   }
 
   /* Thermal mode — high contrast, no grey fills or accent colour */
@@ -348,16 +414,21 @@ export const PRODUCT_PRINT_LABEL_CSS = `
   .product-print-label-root[data-thermal="true"] .meta-label,
   .product-print-label-root[data-thermal="true"] .meta-value,
   .product-print-label-root[data-thermal="true"] .owner-name,
+  .product-print-label-root[data-thermal="true"] .meta-phone,
   .product-print-label-root[data-thermal="true"] .url,
   .product-print-label-root[data-thermal="true"] .compare {
     color: #000 !important;
   }
   .product-print-label-root[data-thermal="true"] .photo-frame,
-  .product-print-label-root[data-thermal="true"] .meta,
   .product-print-label-root[data-thermal="true"] .footer,
   .product-print-label-root[data-thermal="true"] .qr {
     background: #fff !important;
     border-color: #000 !important;
+    border-radius: 0;
+  }
+  .product-print-label-root[data-thermal="true"] .meta {
+    background: transparent !important;
+    border: none !important;
     border-radius: 0;
   }
   .product-print-label-root[data-thermal="true"] .card {
@@ -398,6 +469,21 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     .product-print-label-root[data-thermal="true"] .header {
       background: #fff !important;
     }
+    /* Full-size type in print/PDF (screen preview uses --label-preview-scale). */
+    .product-print-label-root {
+      --label-preview-scale: 1;
+      --label-fs-brand: calc(12mm * var(--label-type-scale));
+      --label-fs-tagline: calc(7mm * var(--label-type-scale));
+      --label-fs-title: calc(13mm * var(--label-type-scale));
+      --label-fs-desc: calc(13mm * var(--label-type-scale));
+      --label-fs-price: calc(17mm * var(--label-type-scale));
+      --label-fs-compare: calc(8.5mm * var(--label-type-scale));
+      --label-fs-meta: calc(9.5mm * var(--label-type-scale));
+      --label-fs-meta-label: calc(7.5mm * var(--label-type-scale));
+      --label-fs-phone: calc(12mm * var(--label-type-scale));
+      --label-fs-scan: calc(13mm * var(--label-type-scale));
+      --label-fs-url: calc(8mm * var(--label-type-scale));
+    }
     /* Lock typography in print/PDF — browsers often shrink px text vs screen preview. */
     .product-print-label-root,
     .product-print-label-root * {
@@ -414,8 +500,19 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     .product-print-label-root .meta-value,
     .product-print-label-root .owner-name { font-size: var(--label-fs-meta) !important; }
     .product-print-label-root .meta-label { font-size: var(--label-fs-meta-label) !important; }
+    .product-print-label-root .meta-phone { font-size: var(--label-fs-phone) !important; font-weight: 800 !important; }
     .product-print-label-root .scan-label { font-size: var(--label-fs-scan) !important; }
     .product-print-label-root .url { font-size: var(--label-fs-url) !important; }
+    .product-print-label-root .meta {
+      background: transparent !important;
+      border: none !important;
+      text-align: center !important;
+    }
+    .product-print-label-root .meta-row,
+    .product-print-label-root .meta-value,
+    .product-print-label-root .owner-name {
+      text-align: center !important;
+    }
     /* Three pages: 1) brand + contact, 2) product, 3) QR code. */
     .product-print-label-root .card {
       page-break-inside: auto !important;

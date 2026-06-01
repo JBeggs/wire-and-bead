@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import {
+  formatPrintLabelUrlLines,
   labelAccentSoft,
   labelTypeScale,
   PRODUCT_PRINT_LABEL_CSS,
@@ -123,6 +124,7 @@ export default function ProductPrintLabelCard({
   }, [logoSrc])
 
   const soft = labelAccentSoft(accent)
+  const urlLines = formatPrintLabelUrlLines(productUrl)
 
   return (
     <>
@@ -164,8 +166,8 @@ export default function ProductPrintLabelCard({
                     </div>
                   ) : null}
                   {ownerPhone ? (
-                    <div className="meta-row">
-                      <span className="meta-value">{ownerPhone}</span>
+                    <div className="meta-row meta-row-phone">
+                      <span className="meta-value meta-phone">{ownerPhone}</span>
                     </div>
                   ) : null}
                 </div>
@@ -194,7 +196,13 @@ export default function ProductPrintLabelCard({
                 ) : (
                   <div className="qr" aria-hidden="true" />
                 )}
-                <div className="url">{productUrl}</div>
+                <div className="url">
+                  {urlLines.map((line, index) => (
+                    <span key={index} className="url-line">
+                      {line}
+                    </span>
+                  ))}
+                </div>
               </div>
             </section>
           </div>
