@@ -121,6 +121,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     color: #141414;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    --label-media-size: 42%;
   }
   .product-print-label-root .label {
     max-width: 360px;
@@ -174,11 +175,15 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     border: 1px solid #ece8e3;
     border-radius: 12px;
     padding: 10px;
-    margin-bottom: 14px;
+    margin: 0 auto 14px;
+    width: var(--label-media-size);
+    max-width: 100%;
   }
   .product-print-label-root .product-image {
     width: 100%;
-    max-height: 190px;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    max-height: none;
     object-fit: contain;
     display: block;
     margin: 0 auto;
@@ -267,16 +272,19 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     margin-bottom: 8px;
   }
   .product-print-label-root .qr {
-    width: 132px;
+    width: var(--label-media-size);
+    max-width: 100%;
     margin: 0 auto 8px;
     padding: 8px;
     background: #fff;
     border: 1px solid #ece8e3;
     border-radius: 10px;
+    box-sizing: border-box;
   }
   .product-print-label-root .qr svg {
-    width: 116px;
-    height: 116px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
     display: block;
     margin: 0 auto;
   }
