@@ -121,7 +121,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     color: #141414;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    --label-media-size: 42%;
+    --label-media-size: 90%;
   }
   .product-print-label-root .label {
     max-width: 360px;
@@ -360,6 +360,15 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     }
     .product-print-label-root[data-thermal="true"] .header {
       background: #fff !important;
+    }
+    /* QR code prints on its own page; all other details stay on page one. */
+    .product-print-label-root .card {
+      page-break-inside: auto !important;
+      break-inside: auto !important;
+    }
+    .product-print-label-root .footer {
+      page-break-before: always !important;
+      break-before: page !important;
     }
   }
 `
