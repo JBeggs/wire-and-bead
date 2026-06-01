@@ -18,6 +18,12 @@ type ProductPrintLabelCardProps = ProductPrintLabelData & {
 // Pixel width images are downscaled to for low-res thermal printers.
 const LOW_RES_TARGET_WIDTH = 384
 
+// Vector (SVG) sources are resolution-independent and rasterise to a blank
+// canvas, so they must never be downscaled — keep the crisp original.
+function isVectorSource(src: string): boolean {
+  return /\.svg\b/i.test(src) || /image\/svg/i.test(src)
+}
+
 // Redraw an image at a low pixel width so it prints cleanly on low-res
 // (thermal) printers. Resolves to null on canvas taint / load failure so the
 // caller can keep the original source.
@@ -93,7 +99,7 @@ export default function ProductPrintLabelCard({
   useEffect(() => {
     let cancelled = false
     setLowResImage(imageSrc)
-    if (!imageSrc) return
+    if (!imageSrc || isVectorSource(imageSrc)) return
     void downscaleToDataUrl(imageSrc, LOW_RES_TARGET_WIDTH).then((dataUrl) => {
       if (!cancelled && dataUrl) setLowResImage(dataUrl)
     })
@@ -106,7 +112,7 @@ export default function ProductPrintLabelCard({
   useEffect(() => {
     let cancelled = false
     setLowResLogo(logoSrc)
-    if (!logoSrc) return
+    if (!logoSrc || isVectorSource(logoSrc)) return
     void downscaleToDataUrl(logoSrc, LOW_RES_TARGET_WIDTH).then((dataUrl) => {
       if (!cancelled && dataUrl) setLowResLogo(dataUrl)
     })

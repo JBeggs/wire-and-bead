@@ -241,28 +241,28 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     width: 90%;
   }
   .product-print-label-root .meta-row {
-    font-size: 26px;
-    line-height: 1.45;
+    font-size: 36px;
+    line-height: 1.4;
     color: #5c574f;
   }
-  .product-print-label-root .meta-row + .meta-row { margin-top: 12px; }
+  .product-print-label-root .meta-row + .meta-row { margin-top: 16px; }
   .product-print-label-root .meta-label {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #8a837a;
-    font-size: 20px;
-    margin-right: 8px;
+    font-size: 28px;
+    margin-right: 10px;
   }
   .product-print-label-root .meta-value {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     color: #141414;
-    font-size: 26px;
+    font-size: 36px;
   }
   .product-print-label-root .owner-name {
     font-weight: 600;
     color: #141414;
-    font-size: 26px;
+    font-size: 36px;
   }
   .product-print-label-root .footer {
     padding: 14px 18px 16px;

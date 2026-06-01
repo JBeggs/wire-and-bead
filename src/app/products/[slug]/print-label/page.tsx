@@ -8,6 +8,7 @@ import { getLogoCardUrl, getProductCardImages } from '@/lib/image-utils'
 import { formatMoney } from '@/lib/money'
 import { resolveLocale } from '@/lib/locale'
 import { resolveLabelAccentColor } from '@/lib/product-print-label'
+import { getSiteSettingsMap } from '@/lib/site-settings'
 import type { Product } from '@/lib/types'
 import PrintLabelClient from './PrintLabelClient'
 
@@ -49,17 +50,22 @@ export async function generateMetadata({ params }: PrintLabelPageProps): Promise
 
 export default async function ProductPrintLabelPage({ params }: PrintLabelPageProps) {
   const { slug } = await params
-  const [product, company, siteOrigin] = await Promise.all([
+  const [product, company, siteOrigin, settings] = await Promise.all([
     getProduct(slug),
     getCompany(),
     getRequestSiteOrigin(),
+    getSiteSettingsMap(),
   ])
 
   if (!product) notFound()
 
   const locale = resolveLocale(company)
   const ownerName = formatOwnerName(product.owner_first_name, product.owner_last_name)
-  const ownerPhone = company.contact.phone?.trim() || null
+  // Read the phone from the fresh per-request settings map. `getCompany()` is
+  // cached for 300s, so a recently updated number would otherwise be stale.
+  const settingsPhone =
+    typeof settings.contact_phone === 'string' ? settings.contact_phone.trim() : ''
+  const ownerPhone = settingsPhone || company.contact.phone?.trim() || null
   const accent = resolveLabelAccentColor(company.brandColor)
   const tagline = company.tagline?.trim() || null
   const logoCandidate = company.logoUrl ? getLogoCardUrl(null, company.logoUrl) : ''
