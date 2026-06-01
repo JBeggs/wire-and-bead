@@ -142,29 +142,33 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     background: linear-gradient(180deg, var(--label-accent-soft, rgba(184,115,51,0.12)) 0%, #fff 100%);
   }
   .product-print-label-root .logo {
-    max-height: 52px;
-    max-width: 180px;
-    width: auto;
+    width: 90%;
+    max-width: 90%;
+    height: auto;
     object-fit: contain;
-    margin: 0 auto 10px;
+    margin: 0 auto 16px;
     display: block;
     filter: grayscale(100%);
     -webkit-filter: grayscale(100%);
   }
   .product-print-label-root .brand-name {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--label-accent, #B87333);
-    margin: 0;
+    margin: 0 auto;
+    width: 90%;
   }
   .product-print-label-root .brand-tagline {
-    margin: 4px 0 0;
-    font-size: 10px;
-    letter-spacing: 0.08em;
+    margin: 8px auto 0;
+    font-size: 18px;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: #6b6560;
+    width: 90%;
   }
   .product-print-label-root .body {
     padding: 16px 18px 14px;
@@ -191,18 +195,20 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     -webkit-filter: grayscale(100%);
   }
   .product-print-label-root h1 {
-    font-size: 19px;
-    line-height: 1.25;
-    margin: 0 0 8px;
-    font-weight: 700;
+    font-size: 34px;
+    line-height: 1.2;
+    margin: 0 auto 14px;
+    font-weight: 800;
     letter-spacing: -0.02em;
     color: #141414;
+    width: 90%;
   }
   .product-print-label-root .desc {
-    font-size: 11px;
+    font-size: 18px;
     line-height: 1.45;
     color: #5c574f;
-    margin: 0 0 12px;
+    margin: 0 auto 18px;
+    width: 90%;
   }
   .product-print-label-root .price-row {
     display: flex;
@@ -213,49 +219,50 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     margin-bottom: 12px;
   }
   .product-print-label-root .price {
-    font-size: 28px;
+    font-size: 48px;
     font-weight: 800;
     letter-spacing: -0.03em;
     color: var(--label-accent, #B87333);
   }
   .product-print-label-root .compare {
-    font-size: 14px;
+    font-size: 22px;
     color: #9a948c;
     text-decoration: line-through;
     font-weight: 500;
   }
   .product-print-label-root .meta {
-    display: inline-block;
+    display: block;
     text-align: left;
     background: #faf9f7;
     border: 1px solid #ece8e3;
     border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 12px;
-    min-width: 78%;
+    padding: 16px 18px;
+    margin: 0 auto 12px;
+    width: 90%;
   }
   .product-print-label-root .meta-row {
-    font-size: 10px;
+    font-size: 18px;
     line-height: 1.5;
     color: #5c574f;
   }
-  .product-print-label-root .meta-row + .meta-row { margin-top: 4px; }
+  .product-print-label-root .meta-row + .meta-row { margin-top: 8px; }
   .product-print-label-root .meta-label {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #8a837a;
-    font-size: 9px;
-    margin-right: 6px;
+    font-size: 15px;
+    margin-right: 8px;
   }
   .product-print-label-root .meta-value {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     color: #141414;
+    font-size: 18px;
   }
   .product-print-label-root .owner-name {
     font-weight: 600;
     color: #141414;
-    font-size: 11px;
+    font-size: 18px;
   }
   .product-print-label-root .footer {
     padding: 14px 18px 16px;
@@ -264,12 +271,12 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     text-align: center;
   }
   .product-print-label-root .scan-label {
-    font-size: 9px;
+    font-size: 18px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--label-accent, #B87333);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
   .product-print-label-root .qr {
     width: var(--label-media-size);
@@ -289,11 +296,13 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     margin: 0 auto;
   }
   .product-print-label-root .url {
-    font-size: 9px;
+    font-size: 14px;
     color: #8a837a;
     word-break: break-all;
-    line-height: 1.35;
+    line-height: 1.4;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    width: 90%;
+    margin: 0 auto;
   }
 
   /* Thermal mode — high contrast, no grey fills or accent colour */
@@ -361,12 +370,16 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     .product-print-label-root[data-thermal="true"] .header {
       background: #fff !important;
     }
-    /* QR code prints on its own page; all other details stay on page one. */
+    /* Three pages: 1) brand + contact, 2) product, 3) QR code. */
     .product-print-label-root .card {
       page-break-inside: auto !important;
       break-inside: auto !important;
     }
-    .product-print-label-root .footer {
+    .product-print-label-root .page {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    .product-print-label-root .page + .page {
       page-break-before: always !important;
       break-before: page !important;
     }

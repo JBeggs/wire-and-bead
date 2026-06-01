@@ -70,20 +70,11 @@ export default function ProductPrintLabelCard({
       >
         <div className="label">
           <div className="card">
-            <div className="header">
-              {logoSrc ? <img className="logo" src={logoSrc} alt={companyName} /> : null}
-              <p className="brand-name">{companyName}</p>
-              {tagline ? <p className="brand-tagline">{tagline}</p> : null}
-            </div>
-            <div className="body">
-              <div className="photo-frame">
-                <img className="product-image" src={imageSrc} alt="" />
-              </div>
-              <h1>{productName}</h1>
-              {description ? <p className="desc">{description}</p> : null}
-              <div className="price-row">
-                <span className="price">{price}</span>
-                {comparePrice ? <span className="compare">{comparePrice}</span> : null}
+            <section className="page page-brand">
+              <div className="header">
+                {logoSrc ? <img className="logo" src={logoSrc} alt={companyName} /> : null}
+                <p className="brand-name">{companyName}</p>
+                {tagline ? <p className="brand-tagline">{tagline}</p> : null}
               </div>
               {sku || ownerName || ownerPhone ? (
                 <div className="meta">
@@ -106,16 +97,33 @@ export default function ProductPrintLabelCard({
                   ) : null}
                 </div>
               ) : null}
-            </div>
-            <div className="footer">
-              <div className="scan-label">Scan to view online</div>
-              {qrSvg ? (
-                <div className="qr" role="img" aria-label="QR code" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-              ) : (
-                <div className="qr" aria-hidden="true" />
-              )}
-              <div className="url">{productUrl}</div>
-            </div>
+            </section>
+
+            <section className="page page-product">
+              <div className="body">
+                <div className="photo-frame">
+                  <img className="product-image" src={imageSrc} alt="" />
+                </div>
+                <h1>{productName}</h1>
+                {description ? <p className="desc">{description}</p> : null}
+                <div className="price-row">
+                  <span className="price">{price}</span>
+                  {comparePrice ? <span className="compare">{comparePrice}</span> : null}
+                </div>
+              </div>
+            </section>
+
+            <section className="page page-qr">
+              <div className="footer">
+                <div className="scan-label">Scan to view online</div>
+                {qrSvg ? (
+                  <div className="qr" role="img" aria-label="QR code" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+                ) : (
+                  <div className="qr" aria-hidden="true" />
+                )}
+                <div className="url">{productUrl}</div>
+              </div>
+            </section>
           </div>
         </div>
       </div>
