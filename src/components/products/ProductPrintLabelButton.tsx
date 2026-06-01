@@ -5,6 +5,7 @@ import QRCode from 'qrcode'
 import { Printer } from 'lucide-react'
 import { getLogoCardUrl, getProductCardImages } from '@/lib/image-utils'
 import { formatMoney } from '@/lib/money'
+import { formatOwnerName } from '@/lib/format-owner-name'
 import type { Product } from '@/lib/types'
 
 type PrintProduct = Pick<
@@ -36,14 +37,6 @@ interface ProductPrintLabelButtonProps {
   brandColor?: string | null
   variant?: 'button' | 'icon'
   className?: string
-}
-
-export function formatOwnerName(first?: string | null, last?: string | null): string | null {
-  const name = [first, last]
-    .map((part) => String(part || '').trim())
-    .filter(Boolean)
-    .join(' ')
-  return name || null
 }
 
 const IMAGE_LOAD_TIMEOUT_MS = 8000
