@@ -3,14 +3,24 @@
 import { useCallback } from 'react'
 import QRCode from 'qrcode'
 import { Printer } from 'lucide-react'
-import { getProductBundleImages, getPublicImageUrl } from '@/lib/image-utils'
+import { getProductCardImages } from '@/lib/image-utils'
 import { formatMoney } from '@/lib/money'
 import type { Product } from '@/lib/types'
 
 type PrintProduct = Pick<
   Product,
-  'name' | 'slug' | 'price' | 'compare_at_price' | 'sku' | 'short_description' | 'image' | 'images'
->
+  | 'name'
+  | 'slug'
+  | 'price'
+  | 'compare_at_price'
+  | 'sku'
+  | 'short_description'
+  | 'image'
+  | 'images'
+> & {
+  image_thumbnail?: string | null
+  image_thumbnails?: string[] | null
+}
 
 interface ProductPrintLabelButtonProps {
   product: PrintProduct
@@ -22,6 +32,11 @@ interface ProductPrintLabelButtonProps {
   className?: string
 }
 
+const PRINT_LABEL_ROOT_ID = 'product-print-label-root'
+const PRINT_LABEL_STYLE_ID = 'product-print-label-styles'
+const IMAGE_LOAD_TIMEOUT_MS = 5000
+const CLEANUP_FALLBACK_MS = 30000
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -30,7 +45,7 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
-function buildPrintDocument(args: {
+function buildLabelHtml(args: {
   companyName: string
   productName: string
   price: string
@@ -39,7 +54,7 @@ function buildPrintDocument(args: {
   description: string
   imageUrl: string
   productUrl: string
-  qrDataUrl: string
+  qrSvg: string
 }): string {
   const {
     companyName,
@@ -50,93 +65,10 @@ function buildPrintDocument(args: {
     description,
     imageUrl,
     productUrl,
-    qrDataUrl,
+    qrSvg,
   } = args
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>${escapeHtml(productName)}</title>
-  <style>
-    @page { margin: 10mm; }
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      color: #111;
-      margin: 0;
-      padding: 0;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    .label {
-      max-width: 340px;
-      margin: 0 auto;
-      padding: 8px 4px 12px;
-      text-align: center;
-    }
-    .brand {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #666;
-      margin-bottom: 10px;
-    }
-    .product-image {
-      width: 100%;
-      max-height: 200px;
-      object-fit: contain;
-      margin: 0 auto 12px;
-      display: block;
-    }
-    h1 {
-      font-size: 18px;
-      line-height: 1.25;
-      margin: 0 0 8px;
-      font-weight: 700;
-    }
-    .desc {
-      font-size: 12px;
-      line-height: 1.4;
-      color: #444;
-      margin: 0 0 10px;
-    }
-    .prices {
-      margin: 0 0 10px;
-    }
-    .price {
-      font-size: 24px;
-      font-weight: 800;
-      color: #111;
-    }
-    .compare {
-      font-size: 14px;
-      color: #888;
-      text-decoration: line-through;
-      margin-left: 6px;
-    }
-    .sku {
-      font-size: 11px;
-      color: #666;
-      font-family: ui-monospace, monospace;
-      margin-bottom: 12px;
-    }
-    .qr {
-      width: 148px;
-      height: 148px;
-      margin: 0 auto 8px;
-      display: block;
-    }
-    .url {
-      font-size: 10px;
-      color: #666;
-      word-break: break-all;
-      line-height: 1.3;
-    }
-  </style>
-</head>
-<body>
+  return `
   <div class="label">
     <div class="brand">${escapeHtml(companyName)}</div>
     <img class="product-image" src="${escapeHtml(imageUrl)}" alt="" />
@@ -147,11 +79,131 @@ function buildPrintDocument(args: {
       ${comparePrice ? `<span class="compare">${escapeHtml(comparePrice)}</span>` : ''}
     </div>
     ${sku ? `<div class="sku">SKU: ${escapeHtml(sku)}</div>` : ''}
-    <img class="qr" src="${qrDataUrl}" alt="QR code" />
+    <div class="qr" role="img" aria-label="QR code">${qrSvg}</div>
     <div class="url">${escapeHtml(productUrl)}</div>
-  </div>
-</body>
-</html>`
+  </div>`
+}
+
+function injectPrintStyles(): void {
+  if (document.getElementById(PRINT_LABEL_STYLE_ID)) return
+
+  const style = document.createElement('style')
+  style.id = PRINT_LABEL_STYLE_ID
+  style.textContent = `
+    @media print {
+      @page { margin: 10mm; }
+      body > *:not(#${PRINT_LABEL_ROOT_ID}) { display: none !important; }
+      #${PRINT_LABEL_ROOT_ID} { display: block !important; }
+    }
+    @media screen {
+      #${PRINT_LABEL_ROOT_ID} { display: none !important; }
+    }
+    #${PRINT_LABEL_ROOT_ID} {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #111;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    #${PRINT_LABEL_ROOT_ID} * { box-sizing: border-box; }
+    #${PRINT_LABEL_ROOT_ID} .label {
+      max-width: 340px;
+      margin: 0 auto;
+      padding: 8px 4px 12px;
+      text-align: center;
+    }
+    #${PRINT_LABEL_ROOT_ID} .brand {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    #${PRINT_LABEL_ROOT_ID} .product-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      margin: 0 auto 12px;
+      display: block;
+    }
+    #${PRINT_LABEL_ROOT_ID} h1 {
+      font-size: 18px;
+      line-height: 1.25;
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+    #${PRINT_LABEL_ROOT_ID} .desc {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #444;
+      margin: 0 0 10px;
+    }
+    #${PRINT_LABEL_ROOT_ID} .prices { margin: 0 0 10px; }
+    #${PRINT_LABEL_ROOT_ID} .price {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111;
+    }
+    #${PRINT_LABEL_ROOT_ID} .compare {
+      font-size: 14px;
+      color: #888;
+      text-decoration: line-through;
+      margin-left: 6px;
+    }
+    #${PRINT_LABEL_ROOT_ID} .sku {
+      font-size: 11px;
+      color: #666;
+      font-family: ui-monospace, monospace;
+      margin-bottom: 12px;
+    }
+    #${PRINT_LABEL_ROOT_ID} .qr {
+      width: 148px;
+      margin: 0 auto 8px;
+    }
+    #${PRINT_LABEL_ROOT_ID} .qr svg {
+      width: 148px;
+      height: 148px;
+      display: block;
+      margin: 0 auto;
+    }
+    #${PRINT_LABEL_ROOT_ID} .url {
+      font-size: 10px;
+      color: #666;
+      word-break: break-all;
+      line-height: 1.3;
+    }
+  `
+  document.head.appendChild(style)
+}
+
+function waitForImages(root: HTMLElement, timeoutMs: number): Promise<void> {
+  const imgs = Array.from(root.querySelectorAll('img'))
+  if (imgs.length === 0) return Promise.resolve()
+
+  return new Promise((resolve) => {
+    let pending = 0
+    const finish = () => {
+      pending -= 1
+      if (pending <= 0) resolve()
+    }
+
+    for (const img of imgs) {
+      if (img.complete && img.naturalHeight > 0) {
+        continue
+      }
+      pending += 1
+      img.addEventListener('load', finish, { once: true })
+      img.addEventListener('error', finish, { once: true })
+    }
+
+    if (pending === 0) {
+      resolve()
+      return
+    }
+
+    window.setTimeout(resolve, timeoutMs)
+  })
 }
 
 export default function ProductPrintLabelButton({
@@ -166,13 +218,13 @@ export default function ProductPrintLabelButton({
     if (typeof window === 'undefined') return
 
     const productUrl = `${window.location.origin}/products/${product.slug}`
-    const qrDataUrl = await QRCode.toDataURL(productUrl, {
+    const qrSvg = await QRCode.toString(productUrl, {
+      type: 'svg',
       width: 180,
       margin: 1,
       errorCorrectionLevel: 'M',
     })
-    const images = getProductBundleImages(product)
-    const imageUrl = getPublicImageUrl(images[0] ?? '')
+    const imageUrl = getProductCardImages(product)[0]
     const price = formatMoney(Number(product.price), currency, locale)
     const comparePrice =
       product.compare_at_price != null && Number(product.compare_at_price) > Number(product.price)
@@ -181,7 +233,14 @@ export default function ProductPrintLabelButton({
     const description = (product.short_description || '').replace(/\s+/g, ' ').trim().slice(0, 160)
     const sku = (product.sku || '').trim() || null
 
-    const html = buildPrintDocument({
+    injectPrintStyles()
+
+    document.getElementById(PRINT_LABEL_ROOT_ID)?.remove()
+
+    const root = document.createElement('div')
+    root.id = PRINT_LABEL_ROOT_ID
+    root.setAttribute('aria-hidden', 'true')
+    root.innerHTML = buildLabelHtml({
       companyName,
       productName: product.name,
       price,
@@ -190,43 +249,24 @@ export default function ProductPrintLabelButton({
       description,
       imageUrl,
       productUrl,
-      qrDataUrl,
+      qrSvg,
     })
+    document.body.appendChild(root)
 
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('aria-hidden', 'true')
-    iframe.style.position = 'fixed'
-    iframe.style.width = '0'
-    iframe.style.height = '0'
-    iframe.style.border = '0'
-    iframe.style.right = '0'
-    iframe.style.bottom = '0'
-    document.body.appendChild(iframe)
+    await waitForImages(root, IMAGE_LOAD_TIMEOUT_MS)
 
-    const doc = iframe.contentDocument || iframe.contentWindow?.document
-    if (!doc) {
-      iframe.remove()
-      return
+    let cleaned = false
+    const cleanup = () => {
+      if (cleaned) return
+      cleaned = true
+      root.remove()
+      window.onafterprint = null
     }
 
-    doc.open()
-    doc.write(html)
-    doc.close()
+    window.onafterprint = cleanup
+    window.setTimeout(cleanup, CLEANUP_FALLBACK_MS)
 
-    const printAndCleanup = () => {
-      try {
-        iframe.contentWindow?.focus()
-        iframe.contentWindow?.print()
-      } finally {
-        window.setTimeout(() => iframe.remove(), 1500)
-      }
-    }
-
-    if (iframe.contentWindow?.document.readyState === 'complete') {
-      window.setTimeout(printAndCleanup, 150)
-    } else {
-      iframe.onload = () => window.setTimeout(printAndCleanup, 150)
-    }
+    window.print()
   }, [companyName, currency, locale, product])
 
   if (variant === 'icon') {
