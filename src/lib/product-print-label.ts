@@ -64,9 +64,17 @@ export function storeThermalMode(thermal: boolean): void {
   window.sessionStorage.setItem(THERMAL_STORAGE_KEY, thermal ? 'true' : 'false')
 }
 
+export function labelTypeScale(paperSize: LabelPaperSize): number {
+  if (paperSize === '58mm') return 0.88
+  if (paperSize === '100mm') return 1.08
+  if (paperSize === 'full') return 1.2
+  return 1
+}
+
 export function buildDynamicPageCss(paperSize: LabelPaperSize): string {
   const option = LABEL_PAPER_OPTIONS.find((o) => o.id === paperSize) ?? LABEL_PAPER_OPTIONS[0]
   const fullPage = paperSize === 'full'
+  const typeScale = labelTypeScale(paperSize)
   return `
 @media print {
   @page {
@@ -78,6 +86,9 @@ export function buildDynamicPageCss(paperSize: LabelPaperSize): string {
     max-width: 100% !important;
     height: auto !important;
     min-height: ${fullPage ? '100vh' : 'auto'} !important;
+    font-size: 16px !important;
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
   }
   .product-print-label-page,
   .product-print-label-root,
@@ -86,6 +97,11 @@ export function buildDynamicPageCss(paperSize: LabelPaperSize): string {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
+  }
+  .product-print-label-root {
+    --label-type-scale: ${typeScale};
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
   }
   .product-print-label-root .label {
     max-width: none !important;
@@ -122,6 +138,18 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     --label-media-size: 90%;
+    --label-type-scale: 1;
+    /* Physical units so screen preview and PDF/print render the same size. */
+    --label-fs-brand: calc(12mm * var(--label-type-scale));
+    --label-fs-tagline: calc(7mm * var(--label-type-scale));
+    --label-fs-title: calc(13mm * var(--label-type-scale));
+    --label-fs-desc: calc(13mm * var(--label-type-scale));
+    --label-fs-price: calc(17mm * var(--label-type-scale));
+    --label-fs-compare: calc(8.5mm * var(--label-type-scale));
+    --label-fs-meta: calc(9.5mm * var(--label-type-scale));
+    --label-fs-meta-label: calc(7.5mm * var(--label-type-scale));
+    --label-fs-scan: calc(13mm * var(--label-type-scale));
+    --label-fs-url: calc(11mm * var(--label-type-scale));
   }
   .product-print-label-root .label {
     max-width: 360px;
@@ -152,7 +180,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     -webkit-filter: grayscale(100%);
   }
   .product-print-label-root .brand-name {
-    font-size: 46px;
+    font-size: var(--label-fs-brand);
     line-height: 1.1;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -163,7 +191,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
   }
   .product-print-label-root .brand-tagline {
     margin: 12px auto 0;
-    font-size: 26px;
+    font-size: var(--label-fs-tagline);
     line-height: 1.3;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -195,7 +223,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     -webkit-filter: grayscale(100%);
   }
   .product-print-label-root h1 {
-    font-size: 50px;
+    font-size: var(--label-fs-title);
     line-height: 1.15;
     margin: 0 auto 18px;
     font-weight: 800;
@@ -204,7 +232,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     width: 90%;
   }
   .product-print-label-root .desc {
-    font-size: 28px;
+    font-size: var(--label-fs-desc);
     line-height: 1.4;
     color: #5c574f;
     margin: 0 auto 22px;
@@ -219,13 +247,13 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     margin-bottom: 12px;
   }
   .product-print-label-root .price {
-    font-size: 66px;
+    font-size: var(--label-fs-price);
     font-weight: 800;
     letter-spacing: -0.03em;
     color: var(--label-accent, #B87333);
   }
   .product-print-label-root .compare {
-    font-size: 32px;
+    font-size: var(--label-fs-compare);
     color: #9a948c;
     text-decoration: line-through;
     font-weight: 500;
@@ -241,7 +269,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     width: 90%;
   }
   .product-print-label-root .meta-row {
-    font-size: 36px;
+    font-size: var(--label-fs-meta);
     line-height: 1.4;
     color: #5c574f;
   }
@@ -251,18 +279,18 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #8a837a;
-    font-size: 28px;
+    font-size: var(--label-fs-meta-label);
     margin-right: 10px;
   }
   .product-print-label-root .meta-value {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     color: #141414;
-    font-size: 36px;
+    font-size: var(--label-fs-meta);
   }
   .product-print-label-root .owner-name {
     font-weight: 600;
     color: #141414;
-    font-size: 36px;
+    font-size: var(--label-fs-meta);
   }
   .product-print-label-root .footer {
     padding: 14px 18px 16px;
@@ -271,7 +299,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     text-align: center;
   }
   .product-print-label-root .scan-label {
-    font-size: 30px;
+    font-size: var(--label-fs-scan);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -296,7 +324,7 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     margin: 0 auto;
   }
   .product-print-label-root .url {
-    font-size: 22px;
+    font-size: var(--label-fs-url);
     color: #8a837a;
     word-break: break-all;
     line-height: 1.4;
@@ -370,6 +398,24 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     .product-print-label-root[data-thermal="true"] .header {
       background: #fff !important;
     }
+    /* Lock typography in print/PDF — browsers often shrink px text vs screen preview. */
+    .product-print-label-root,
+    .product-print-label-root * {
+      -webkit-text-size-adjust: none !important;
+      text-size-adjust: none !important;
+    }
+    .product-print-label-root .brand-name { font-size: var(--label-fs-brand) !important; }
+    .product-print-label-root .brand-tagline { font-size: var(--label-fs-tagline) !important; }
+    .product-print-label-root h1 { font-size: var(--label-fs-title) !important; }
+    .product-print-label-root .desc { font-size: var(--label-fs-desc) !important; }
+    .product-print-label-root .price { font-size: var(--label-fs-price) !important; }
+    .product-print-label-root .compare { font-size: var(--label-fs-compare) !important; }
+    .product-print-label-root .meta-row,
+    .product-print-label-root .meta-value,
+    .product-print-label-root .owner-name { font-size: var(--label-fs-meta) !important; }
+    .product-print-label-root .meta-label { font-size: var(--label-fs-meta-label) !important; }
+    .product-print-label-root .scan-label { font-size: var(--label-fs-scan) !important; }
+    .product-print-label-root .url { font-size: var(--label-fs-url) !important; }
     /* Three pages: 1) brand + contact, 2) product, 3) QR code. */
     .product-print-label-root .card {
       page-break-inside: auto !important;

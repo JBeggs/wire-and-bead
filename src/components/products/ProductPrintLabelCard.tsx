@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import {
   labelAccentSoft,
+  labelTypeScale,
   PRODUCT_PRINT_LABEL_CSS,
   type LabelPaperSize,
   type ProductPrintLabelData,
@@ -134,6 +135,7 @@ export default function ProductPrintLabelCard({
           {
             '--label-accent': accent,
             '--label-accent-soft': soft,
+            '--label-type-scale': labelTypeScale(paperSize),
             maxWidth: previewWidth,
             width: '100%',
           } as React.CSSProperties
