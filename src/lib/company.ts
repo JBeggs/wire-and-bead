@@ -38,6 +38,15 @@ function normaliseImageUrl(v: unknown): string | null {
   return null
 }
 
+/** Contact fields always come from the live site-settings map (never stale cache). */
+function contactFromSettings(map: Record<string, unknown>): Company['contact'] {
+  return {
+    email: resolvePublicContactEmail(coerceString(map.contact_email), map),
+    phone: coerceString(map.contact_phone),
+    address: coerceString(map.contact_address),
+  }
+}
+
 async function fetchCompanyUncached(): Promise<Company> {
   try {
     const map = await getSiteSettingsMap()
@@ -50,11 +59,7 @@ async function fetchCompanyUncached(): Promise<Company> {
       heroImageUrl: normaliseImageUrl(map.hero_image ?? map.site_hero),
       ogImageUrl: normaliseImageUrl(map.og_image ?? map.site_og_image),
       brandColor: coerceString(map.brand_color) || null,
-      contact: {
-        email: resolvePublicContactEmail(coerceString(map.contact_email), map),
-        phone: coerceString(map.contact_phone),
-        address: coerceString(map.contact_address),
-      },
+      contact: contactFromSettings(map),
       social: {
         facebook: coerceString(map.social_facebook),
         twitter: coerceString(map.social_twitter),
@@ -81,7 +86,14 @@ const getCompanyCached = unstable_cache(fetchCompanyUncached, ['company', compan
 /**
  * Fetch the active company record. Server-only.
  * Always returns a valid `Company`; degrades to `FALLBACK_COMPANY` on error.
+ *
+ * Branding fields are cached for 5 minutes; contact details are always read
+ * fresh from site settings so footer/contact blocks reflect recent updates.
  */
 export async function getCompany(): Promise<Company> {
-  return getCompanyCached()
+  const [cached, settings] = await Promise.all([getCompanyCached(), getSiteSettingsMap()])
+  return {
+    ...cached,
+    contact: contactFromSettings(settings),
+  }
 }
