@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -108,9 +108,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [cookieStore, company] = await Promise.all([cookies(), getCompany()])
+  const [cookieStore, company, headersList] = await Promise.all([cookies(), getCompany(), headers()])
   const initialTheme = readThemeCookie(cookieStore.get('site_theme')?.value)
   const { htmlVariables, bodyClassName } = themeFontClasses(initialTheme)
+  const pathname = headersList.get('x-pathname') || ''
+  const isPrintLabelPage = pathname.includes('/print-label')
 
   return (
     <html
@@ -132,12 +134,16 @@ export default async function RootLayout({
             <ToastProvider>
               <AuthProvider>
                 <CartProvider>
-                  <div className="min-h-screen flex flex-col">
-                    <Header />
-                    <main className="flex-1">{children}</main>
-                    <Footer />
-                  </div>
-                  <CookieConsentBanner />
+                  {isPrintLabelPage ? (
+                    children
+                  ) : (
+                    <div className="min-h-screen flex flex-col">
+                      <Header />
+                      <main className="flex-1">{children}</main>
+                      <Footer />
+                    </div>
+                  )}
+                  {!isPrintLabelPage ? <CookieConsentBanner /> : null}
                 </CartProvider>
               </AuthProvider>
             </ToastProvider>

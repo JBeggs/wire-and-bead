@@ -15,7 +15,6 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCompany } from '@/contexts/CompanyContext'
 import ProductPrintLabelButton from '@/components/products/ProductPrintLabelButton'
-import { formatOwnerName } from '@/lib/format-owner-name'
 import { resolveLocale } from '@/lib/locale'
 
 export default function InventoryPage() {
@@ -502,18 +501,7 @@ export default function InventoryPage() {
                       <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
                     </a>
                   )}
-                  <ProductPrintLabelButton
-                    product={product}
-                    companyName={company.name}
-                    currency={company.currency}
-                    locale={locale}
-                    ownerName={formatOwnerName(product.owner_first_name, product.owner_last_name)}
-                    ownerPhone={company.contact.phone?.trim() || null}
-                    logoUrl={company.logoUrl}
-                    tagline={company.tagline}
-                    brandColor={company.brandColor}
-                    variant="icon"
-                  />
+                  <ProductPrintLabelButton product={product} variant="icon" />
                   <Link 
                     href={`/admin/inventory/edit/${product.id}`}
                     className="p-2 text-text-muted hover:text-vintage-primary hover:bg-vintage-primary/5 rounded-lg transition-all"

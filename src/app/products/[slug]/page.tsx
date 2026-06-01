@@ -11,7 +11,6 @@ import AddToCartButton from './AddToCartButton'
 import ProductGallery from './ProductGallery'
 import WhatsAppShareButton from './WhatsAppShareButton'
 import ProductPrintLabelButton from '@/components/products/ProductPrintLabelButton'
-import { formatOwnerName } from '@/lib/format-owner-name'
 import { getMinQuantity, getStockQuantity, isBundleProduct, isGumtreeProduct, isTimedProduct } from '@/lib/product-utils'
 import { getCompany } from '@/lib/company'
 import { getSiteSetting, coerceSiteNumber, coerceSiteString } from '@/lib/site-settings'
@@ -246,17 +245,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
                 <AddToCartButton product={product} />
                 <WhatsAppShareButton product={product} shareMediaPath={shareMediaPath} />
-                <ProductPrintLabelButton
-                  product={product}
-                  companyName={company.name}
-                  currency={company.currency}
-                  locale={locale}
-                  ownerName={formatOwnerName(product.owner_first_name, product.owner_last_name)}
-                  ownerPhone={company.contact.phone?.trim() || null}
-                  logoUrl={company.logoUrl}
-                  tagline={company.tagline}
-                  brandColor={company.brandColor}
-                />
+                <ProductPrintLabelButton product={product} />
 
                 <div className="grid gap-3 text-sm text-text-muted">
                   {product.delivery_time && (
