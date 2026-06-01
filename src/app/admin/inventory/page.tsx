@@ -14,7 +14,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCompany } from '@/contexts/CompanyContext'
-import ProductPrintLabelButton from '@/components/products/ProductPrintLabelButton'
+import ProductPrintLabelButton, { formatOwnerName } from '@/components/products/ProductPrintLabelButton'
 import { resolveLocale } from '@/lib/locale'
 
 export default function InventoryPage() {
