@@ -506,6 +506,11 @@ export default function InventoryPage() {
                     companyName={company.name}
                     currency={company.currency}
                     locale={locale}
+                    ownerName={formatOwnerName(product.owner_first_name, product.owner_last_name)}
+                    ownerPhone={company.contact.phone?.trim() || null}
+                    logoUrl={company.logoUrl}
+                    tagline={company.tagline}
+                    brandColor={company.brandColor}
                     variant="icon"
                   />
                   <Link 

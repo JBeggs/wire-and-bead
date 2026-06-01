@@ -10,7 +10,7 @@ import { ArrowLeft, Shield, Info, Phone, FileText, Package, TimerReset, Truck } 
 import AddToCartButton from './AddToCartButton'
 import ProductGallery from './ProductGallery'
 import WhatsAppShareButton from './WhatsAppShareButton'
-import ProductPrintLabelButton from '@/components/products/ProductPrintLabelButton'
+import ProductPrintLabelButton, { formatOwnerName } from '@/components/products/ProductPrintLabelButton'
 import { getMinQuantity, getStockQuantity, isBundleProduct, isGumtreeProduct, isTimedProduct } from '@/lib/product-utils'
 import { getCompany } from '@/lib/company'
 import { getSiteSetting, coerceSiteNumber, coerceSiteString } from '@/lib/site-settings'
@@ -250,6 +250,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   companyName={company.name}
                   currency={company.currency}
                   locale={locale}
+                  ownerName={formatOwnerName(product.owner_first_name, product.owner_last_name)}
+                  ownerPhone={company.contact.phone?.trim() || null}
+                  logoUrl={company.logoUrl}
+                  tagline={company.tagline}
+                  brandColor={company.brandColor}
                 />
 
                 <div className="grid gap-3 text-sm text-text-muted">
