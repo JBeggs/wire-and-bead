@@ -152,18 +152,18 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     -webkit-filter: grayscale(100%);
   }
   .product-print-label-root .brand-name {
-    font-size: 30px;
-    line-height: 1.15;
+    font-size: 46px;
+    line-height: 1.1;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--label-accent, #B87333);
     margin: 0 auto;
     width: 90%;
   }
   .product-print-label-root .brand-tagline {
-    margin: 8px auto 0;
-    font-size: 18px;
+    margin: 12px auto 0;
+    font-size: 26px;
     line-height: 1.3;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -195,19 +195,19 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     -webkit-filter: grayscale(100%);
   }
   .product-print-label-root h1 {
-    font-size: 34px;
-    line-height: 1.2;
-    margin: 0 auto 14px;
+    font-size: 50px;
+    line-height: 1.15;
+    margin: 0 auto 18px;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #141414;
     width: 90%;
   }
   .product-print-label-root .desc {
-    font-size: 18px;
-    line-height: 1.45;
+    font-size: 28px;
+    line-height: 1.4;
     color: #5c574f;
-    margin: 0 auto 18px;
+    margin: 0 auto 22px;
     width: 90%;
   }
   .product-print-label-root .price-row {
@@ -219,13 +219,13 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     margin-bottom: 12px;
   }
   .product-print-label-root .price {
-    font-size: 48px;
+    font-size: 66px;
     font-weight: 800;
     letter-spacing: -0.03em;
     color: var(--label-accent, #B87333);
   }
   .product-print-label-root .compare {
-    font-size: 22px;
+    font-size: 32px;
     color: #9a948c;
     text-decoration: line-through;
     font-weight: 500;
@@ -241,28 +241,28 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     width: 90%;
   }
   .product-print-label-root .meta-row {
-    font-size: 18px;
-    line-height: 1.5;
+    font-size: 26px;
+    line-height: 1.45;
     color: #5c574f;
   }
-  .product-print-label-root .meta-row + .meta-row { margin-top: 8px; }
+  .product-print-label-root .meta-row + .meta-row { margin-top: 12px; }
   .product-print-label-root .meta-label {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #8a837a;
-    font-size: 15px;
+    font-size: 20px;
     margin-right: 8px;
   }
   .product-print-label-root .meta-value {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     color: #141414;
-    font-size: 18px;
+    font-size: 26px;
   }
   .product-print-label-root .owner-name {
     font-weight: 600;
     color: #141414;
-    font-size: 18px;
+    font-size: 26px;
   }
   .product-print-label-root .footer {
     padding: 14px 18px 16px;
@@ -271,12 +271,12 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     text-align: center;
   }
   .product-print-label-root .scan-label {
-    font-size: 18px;
+    font-size: 30px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--label-accent, #B87333);
-    margin-bottom: 12px;
+    margin-bottom: 16px;
   }
   .product-print-label-root .qr {
     width: var(--label-media-size);
@@ -296,13 +296,13 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     margin: 0 auto;
   }
   .product-print-label-root .url {
-    font-size: 14px;
+    font-size: 22px;
     color: #8a837a;
     word-break: break-all;
     line-height: 1.4;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     width: 90%;
-    margin: 0 auto;
+    margin: 12px auto 0;
   }
 
   /* Thermal mode — high contrast, no grey fills or accent colour */
