@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { serverEcommerceApi } from '@/lib/api-server'
 export const dynamic = 'force-dynamic'
@@ -32,6 +33,15 @@ import {
   type StorefrontShelf,
 } from '@/lib/storefront-shelves'
 import PageHero from '@/components/hero/PageHero'
+import {
+  buildProductsListShareImageUrls,
+  buildProductsPageOgImageUrl,
+  productsOgFilterParams,
+  resolveProductsPageTitle,
+} from '@/lib/products-share'
+import ProductsWhatsAppShareButton from '@/app/products/ProductsWhatsAppShareButton'
+import { getCompany } from '@/lib/company'
+import { getRequestSiteOrigin } from '@/lib/media-proxy'
 
 const SHELF_ICONS: Record<string, LucideIcon> = {
   star: Star,
@@ -178,12 +188,51 @@ async function getProducts(params: {
   }
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+export async function generateMetadata({
+  searchParams,
+}: Pick<ProductsPageProps, 'searchParams'>): Promise<Metadata> {
   const params = await searchParams
-  const [{ products, pagination }, categories, shelves] = await Promise.all([
+  const [{ products }, categories, shelves, company, siteOrigin] = await Promise.all([
     getProducts(params),
     getStorefrontCategories(),
     getStorefrontShelves(),
+    getCompany(),
+    getRequestSiteOrigin(),
+  ])
+  const activeShelf = shelves.find((s) => paramsMatchShelf(params, s)) ?? null
+  const title = resolveProductsPageTitle(params, categories, activeShelf?.label)
+  const ogParams = productsOgFilterParams(params)
+  const image = buildProductsPageOgImageUrl(title, ogParams, siteOrigin)
+  const description =
+    products.length > 0
+      ? `${products.length} product${products.length === 1 ? '' : 's'} — ${title}`
+      : `Browse ${title} at ${company.name}`
+
+  return {
+    title: `${title} | ${company.name}`,
+    description,
+    openGraph: {
+      title: `${title} | ${company.name}`,
+      description,
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | ${company.name}`,
+      description,
+      images: [image],
+    },
+  }
+}
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const params = await searchParams
+  const [{ products, pagination }, categories, shelves, company, siteOrigin] = await Promise.all([
+    getProducts(params),
+    getStorefrontCategories(),
+    getStorefrontShelves(),
+    getCompany(),
+    getRequestSiteOrigin(),
   ])
 
   const isVintage = params.condition === 'vintage'
@@ -212,28 +261,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const crmCategoryName = params.category
     ? categories.find((c) => c.slug === params.category)?.name
     : undefined
-  const crmCategoryTitleFallback = params.category
-    ? params.category
-        .split('-')
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ')
-    : ''
 
-  const title = isSupplierGroup
-    ? 'Delivery Group'
-    : isBundles
-      ? 'Bundles'
-      : isTimed
-        ? 'Timed Products'
-        : isVintage
-          ? 'Vintage Treasures'
-          : isNew
-            ? 'New Arrivals'
-            : isFeatured
-              ? 'Featured Products'
-              : hasCategory
-                ? crmCategoryName || crmCategoryTitleFallback
-                : 'All Products'
+  const activeShelf: StorefrontShelf | null =
+    shelves.find((s) => paramsMatchShelf(params, s)) ?? null
+
+  const title = resolveProductsPageTitle(params, categories, activeShelf?.label)
 
   const isAllShelves = isAllProductFilters(params)
 
@@ -250,7 +282,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             : isFeatured
               ? 'Hand-picked favorites and standout items'
               : hasCategory
-                ? `Products in the ${crmCategoryName || crmCategoryTitleFallback} category.`
+                ? `Products in the ${crmCategoryName || params.category} category.`
                 : 'Browse our complete collection of products'
 
   const makeHref = (overrides: Record<string, string | null>) => {
@@ -276,9 +308,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     const qs = query.toString()
     return qs ? `/products?${qs}` : '/products'
   }
-
-  const activeShelf: StorefrontShelf | null =
-    shelves.find((s) => paramsMatchShelf(params, s)) ?? null
 
   const headerBg = isBundles
     ? 'bg-blue-700'
@@ -455,6 +484,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 basePath="/products"
                 searchParams={searchParamsForNav}
               />
+              <div className="mt-10 pt-8 border-t border-gray-200">
+                <ProductsWhatsAppShareButton
+                  title={title}
+                  companyName={company.name}
+                  shareImageUrls={buildProductsListShareImageUrls(products, siteOrigin)}
+                  products={products}
+                  categories={categories}
+                />
+              </div>
             </>
           ) : (
             <div className="text-center py-16" data-cy="products-empty">

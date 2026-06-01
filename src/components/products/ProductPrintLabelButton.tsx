@@ -93,10 +93,27 @@ function injectPrintStyles(): void {
     @media print {
       @page { margin: 10mm; }
       body > *:not(#${PRINT_LABEL_ROOT_ID}) { display: none !important; }
-      #${PRINT_LABEL_ROOT_ID} { display: block !important; }
+      #${PRINT_LABEL_ROOT_ID} {
+        display: block !important;
+        position: static !important;
+        left: auto !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
     }
     @media screen {
-      #${PRINT_LABEL_ROOT_ID} { display: none !important; }
+      /* Off-screen, not display:none — Android otherwise skips loading img src before print. */
+      #${PRINT_LABEL_ROOT_ID} {
+        position: fixed !important;
+        left: -10000px !important;
+        top: 0 !important;
+        width: 340px !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        z-index: -1 !important;
+      }
     }
     #${PRINT_LABEL_ROOT_ID} {
       box-sizing: border-box;
@@ -177,33 +194,65 @@ function injectPrintStyles(): void {
   document.head.appendChild(style)
 }
 
-function waitForImages(root: HTMLElement, timeoutMs: number): Promise<void> {
+function toAbsoluteFetchUrl(url: string): string {
+  if (!url) return url
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
+  if (typeof window === 'undefined') return url
+  return `${window.location.origin}${url.startsWith('/') ? url : `/${url}`}`
+}
+
+/** Embed product photo inline so Android print/PDF includes it reliably. */
+async function fetchImageDataUrl(url: string): Promise<string> {
+  const absolute = toAbsoluteFetchUrl(url)
+  if (!absolute || absolute.startsWith('data:')) return absolute
+
+  try {
+    const res = await fetch(absolute, { cache: 'no-store', credentials: 'same-origin' })
+    if (!res.ok) return absolute
+    const blob = await res.blob()
+    if (!blob.size) return absolute
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result || absolute))
+      reader.onerror = () => resolve(absolute)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return absolute
+  }
+}
+
+async function waitForImages(root: HTMLElement, timeoutMs: number): Promise<void> {
   const imgs = Array.from(root.querySelectorAll('img'))
-  if (imgs.length === 0) return Promise.resolve()
+  if (imgs.length === 0) return
 
-  return new Promise((resolve) => {
-    let pending = 0
-    const finish = () => {
-      pending -= 1
-      if (pending <= 0) resolve()
-    }
-
-    for (const img of imgs) {
-      if (img.complete && img.naturalHeight > 0) {
-        continue
-      }
-      pending += 1
-      img.addEventListener('load', finish, { once: true })
-      img.addEventListener('error', finish, { once: true })
-    }
-
-    if (pending === 0) {
-      resolve()
-      return
-    }
-
-    window.setTimeout(resolve, timeoutMs)
-  })
+  await Promise.all(
+    imgs.map((img) =>
+      Promise.race([
+        (async () => {
+          if (img.complete && img.naturalHeight > 0) return
+          if (typeof img.decode === 'function') {
+            try {
+              await img.decode()
+              if (img.naturalHeight > 0) return
+            } catch {
+              /* fall through to load listeners */
+            }
+          }
+          await new Promise<void>((resolve) => {
+            const done = () => resolve()
+            if (img.complete && img.naturalHeight > 0) {
+              done()
+              return
+            }
+            img.addEventListener('load', done, { once: true })
+            img.addEventListener('error', done, { once: true })
+          })
+        })(),
+        new Promise<void>((resolve) => window.setTimeout(resolve, timeoutMs)),
+      ]),
+    ),
+  )
 }
 
 export default function ProductPrintLabelButton({
@@ -224,7 +273,7 @@ export default function ProductPrintLabelButton({
       margin: 1,
       errorCorrectionLevel: 'M',
     })
-    const imageUrl = getProductCardImages(product)[0]
+    const imageUrl = await fetchImageDataUrl(getProductCardImages(product)[0])
     const price = formatMoney(Number(product.price), currency, locale)
     const comparePrice =
       product.compare_at_price != null && Number(product.compare_at_price) > Number(product.price)

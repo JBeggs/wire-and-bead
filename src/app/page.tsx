@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, ShoppingBag, Package } from 'lucide-react'
 import { serverEcommerceApi } from '@/lib/api-server'
@@ -14,8 +15,29 @@ import { getCompany, type Company } from '@/lib/company'
 import { unwrapEcommerceList, unwrapEcommerceProductList } from '@/lib/ecommerce-list'
 import { categoryViewAllHref, homeCategoryProductListParams } from '@/lib/home-category-shelves'
 import PageHero from '@/components/hero/PageHero'
+import { getShareImage } from '@/lib/share-image'
+import { openGraphImageFromMediaUrl } from '@/lib/product-seo'
+import { getRequestSiteOrigin } from '@/lib/media-proxy'
+import HomeWhatsAppShareButton from '@/app/home/HomeWhatsAppShareButton'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [company, image] = await Promise.all([getCompany(), getShareImage('home')])
+  return {
+    title: company.name,
+    description: company.description || company.tagline,
+    openGraph: {
+      title: company.name,
+      description: company.description || company.tagline,
+      images: [{ url: image }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: [image],
+    },
+  }
+}
 
 function sortProductsByName(products: Product[]): Product[] {
   return [...products].sort((a, b) =>
@@ -181,12 +203,16 @@ async function getHomeArticles() {
 }
 
 export default async function HomePage() {
-  const [company, featuredProducts, categoryShelves, homeArticles] = await Promise.all([
-    getCompany(),
-    getFeaturedProducts(),
-    getHomeCategoryShelves(),
-    getHomeArticles(),
-  ])
+  const [company, featuredProducts, categoryShelves, homeArticles, siteOrigin, heroShareImage] =
+    await Promise.all([
+      getCompany(),
+      getFeaturedProducts(),
+      getHomeCategoryShelves(),
+      getHomeArticles(),
+      getRequestSiteOrigin(),
+      getShareImage('home'),
+    ])
+  const shareImageUrl = openGraphImageFromMediaUrl(heroShareImage, siteOrigin)
 
   return (
     <div className="min-h-screen">
@@ -194,6 +220,17 @@ export default async function HomePage() {
         pageSlug="home"
         fallback={<DefaultHomeHero company={company} />}
       />
+
+      <section className="py-8 bg-bg border-b border-border-default">
+        <div className="container-wide flex justify-center">
+          <HomeWhatsAppShareButton
+            companyName={company.name}
+            tagline={company.tagline}
+            description={company.description}
+            shareImageUrl={shareImageUrl}
+          />
+        </div>
+      </section>
 
       {featuredProducts.length > 0 ? (
         <section className="py-16 bg-bg">
