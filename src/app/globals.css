@@ -524,12 +524,64 @@ input:-webkit-autofill:active {
 .slide-in-from-right-full { animation-name: slide-in-from-right-full; }
 .slide-in-from-bottom-full { animation-name: slide-in-from-bottom-full; }
 
+/* On-screen + print: label route hides storefront header, footer, and nav */
+body:has([data-print-label-page]) header,
+body:has([data-print-label-page]) footer,
+body:has([data-print-label-page]) nav,
+body.product-print-label-active header,
+body.product-print-label-active footer,
+body.product-print-label-active nav,
+body.product-print-label-active [data-cookie-consent] {
+  display: none !important;
+}
+
+body:has([data-print-label-page]) main,
+body.product-print-label-active main {
+  padding: 0 !important;
+}
+
 /* Print */
 @media print {
   .no-print { display: none !important; }
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* Product print label page — only the shelf tag in PDF */
+  body:has([data-print-label-page]) header,
+  body:has([data-print-label-page]) footer,
+  body:has([data-print-label-page]) nav,
+  body:has([data-print-label-page]) [data-print-chrome],
+  body:has([data-print-label-page]) [data-cookie-consent],
+  body:has([data-print-label-page]) .no-print,
+  body.product-print-label-active header,
+  body.product-print-label-active footer,
+  body.product-print-label-active nav,
+  body.product-print-label-active [data-print-chrome],
+  body.product-print-label-active [data-cookie-consent],
+  body.product-print-label-active .no-print {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body:has([data-print-label-page]) .product-print-label-page,
+  body.product-print-label-active .product-print-label-page {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    background: #fff !important;
+  }
+
+  body:has([data-print-label-page]) main,
+  body.product-print-label-active main {
+    padding: 0 !important;
+    margin: 0 !important;
   }
 }
 

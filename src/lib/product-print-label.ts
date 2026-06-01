@@ -47,6 +47,8 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     object-fit: contain;
     margin: 0 auto 10px;
     display: block;
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
   }
   .product-print-label-root .brand-name {
     font-size: 13px;
@@ -80,6 +82,8 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     object-fit: contain;
     display: block;
     margin: 0 auto;
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
   }
   .product-print-label-root h1 {
     font-size: 19px;
@@ -184,10 +188,31 @@ export const PRODUCT_PRINT_LABEL_CSS = `
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   @media print {
-    [data-print-chrome] { display: none !important; }
-    body { background: #fff !important; }
-    .product-print-label-page { padding: 0 !important; background: #fff !important; }
+    html, body {
+      background: #fff !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    body.product-print-label-active header,
+    body.product-print-label-active footer,
+    body.product-print-label-active nav,
+    body.product-print-label-active [data-print-chrome],
+    body.product-print-label-active [data-cookie-consent],
+    body.product-print-label-active .no-print {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    .product-print-label-page {
+      padding: 0 !important;
+      background: #fff !important;
+      min-height: auto !important;
+    }
     .product-print-label-root .card { box-shadow: none; }
+    .product-print-label-root .logo,
+    .product-print-label-root .product-image {
+      filter: grayscale(100%) !important;
+      -webkit-filter: grayscale(100%) !important;
+    }
   }
 `
 

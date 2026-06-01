@@ -77,21 +77,23 @@ export default async function ProductPrintLabelPage({ params }: PrintLabelPagePr
   const productUrl = origin ? `${origin.replace(/\/$/, '')}/products/${product.slug}` : `/products/${product.slug}`
 
   return (
-    <PrintLabelClient
-      productSlug={product.slug}
-      companyName={company.name}
-      tagline={tagline}
-      accent={accent}
-      logoSrc={logoSrc}
-      productName={product.name}
-      price={price}
-      comparePrice={comparePrice}
-      sku={sku}
-      description={description}
-      imageSrc={imageSrc}
-      productUrl={productUrl}
-      ownerName={ownerName}
-      ownerPhone={ownerPhone}
-    />
+    <div data-print-label-page>
+      <PrintLabelClient
+        productSlug={product.slug}
+        companyName={company.name}
+        tagline={tagline}
+        accent={accent}
+        logoSrc={logoSrc}
+        productName={product.name}
+        price={price}
+        comparePrice={comparePrice}
+        sku={sku}
+        description={description}
+        imageSrc={imageSrc}
+        productUrl={productUrl}
+        ownerName={ownerName}
+        ownerPhone={ownerPhone}
+      />
+    </div>
   )
 }

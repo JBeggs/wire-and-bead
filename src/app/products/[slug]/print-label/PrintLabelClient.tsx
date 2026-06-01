@@ -1,10 +1,12 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Printer } from 'lucide-react'
 import ProductPrintLabelCard from '@/components/products/ProductPrintLabelCard'
 import type { ProductPrintLabelData } from '@/lib/product-print-label'
+
+const PRINT_LABEL_BODY_CLASS = 'product-print-label-active'
 
 type PrintLabelClientProps = ProductPrintLabelData & {
   productSlug: string
@@ -12,6 +14,13 @@ type PrintLabelClientProps = ProductPrintLabelData & {
 
 export default function PrintLabelClient({ productSlug, ...label }: PrintLabelClientProps) {
   const [printing, setPrinting] = useState(false)
+
+  useEffect(() => {
+    document.body.classList.add(PRINT_LABEL_BODY_CLASS)
+    return () => {
+      document.body.classList.remove(PRINT_LABEL_BODY_CLASS)
+    }
+  }, [])
 
   const handlePrint = useCallback(async () => {
     setPrinting(true)
@@ -51,7 +60,7 @@ export default function PrintLabelClient({ productSlug, ...label }: PrintLabelCl
 
   return (
     <div className="product-print-label-page min-h-screen bg-[#f3f1ed] px-4 py-6">
-      <div data-print-chrome className="mx-auto mb-6 flex max-w-md items-center justify-between gap-3">
+      <div data-print-chrome className="no-print mx-auto mb-6 flex max-w-md items-center justify-between gap-3">
         <Link
           href={`/products/${productSlug}`}
           className="inline-flex items-center gap-2 rounded-full border border-[#e8e4df] bg-white px-4 py-2 text-sm font-medium text-[#141414]"
