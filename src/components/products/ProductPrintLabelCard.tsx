@@ -2,9 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
-import { labelAccentSoft, PRODUCT_PRINT_LABEL_CSS, type ProductPrintLabelData } from '@/lib/product-print-label'
+import {
+  labelAccentSoft,
+  PRODUCT_PRINT_LABEL_CSS,
+  type LabelPaperSize,
+  type ProductPrintLabelData,
+} from '@/lib/product-print-label'
 
-type ProductPrintLabelCardProps = ProductPrintLabelData
+type ProductPrintLabelCardProps = ProductPrintLabelData & {
+  paperSize?: LabelPaperSize
+  thermalMode?: boolean
+  previewWidth?: string
+}
 
 export default function ProductPrintLabelCard({
   companyName,
@@ -20,6 +29,9 @@ export default function ProductPrintLabelCard({
   productUrl,
   ownerName,
   ownerPhone,
+  paperSize = '80mm',
+  thermalMode = true,
+  previewWidth = '80mm',
 }: ProductPrintLabelCardProps) {
   const [qrSvg, setQrSvg] = useState('')
 
@@ -44,11 +56,15 @@ export default function ProductPrintLabelCard({
     <>
       <style dangerouslySetInnerHTML={{ __html: PRODUCT_PRINT_LABEL_CSS }} />
       <div
-        className="product-print-label-root"
+        className="product-print-label-root mx-auto"
+        data-thermal={thermalMode ? 'true' : 'false'}
+        data-paper={paperSize}
         style={
           {
             '--label-accent': accent,
             '--label-accent-soft': soft,
+            maxWidth: previewWidth,
+            width: '100%',
           } as React.CSSProperties
         }
       >
