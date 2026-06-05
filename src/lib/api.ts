@@ -47,6 +47,10 @@ export function getApiErrorMessage(error: unknown, fallback = 'Something went wr
     const errPayload =
       o.details && typeof o.details === 'object' && 'error' in o.details ? o.details.error : undefined
     if (errPayload !== undefined && errPayload !== null) {
+      if (typeof errPayload === 'object' && !Array.isArray(errPayload) && typeof (errPayload as { message?: unknown }).message === 'string') {
+        const nested = (errPayload as { message: string }).message.trim()
+        if (nested) return nested
+      }
       const fromValidation = drfErrorToMessage(errPayload, '')
       if (fromValidation) return fromValidation
     }
@@ -364,13 +368,23 @@ export class ApiClient {
           message = errorFields.join('; ')
         } else if (data.error) {
           if (typeof data.error === 'object' && data.error !== null) {
-            const errorFields = Object.entries(data.error)
-              .map(([field, messages]: [string, any]) => {
-                const m = drfErrorToMessage(messages, '')
-                return m ? `${field}: ${m}` : ''
-              })
-              .filter(Boolean)
-            message = errorFields.join('; ')
+            const errObj = data.error as Record<string, unknown>
+            const nestedDetails = errObj.details
+            if (nestedDetails && typeof nestedDetails === 'object') {
+              message = drfErrorToMessage(nestedDetails, '')
+            }
+            if (typeof errObj.message === 'string' && errObj.message.trim()) {
+              message = errObj.message.trim()
+            } else if (!message || message === 'An error occurred') {
+              const errorFields = Object.entries(errObj)
+                .filter(([field]) => field !== 'details')
+                .map(([field, messages]: [string, any]) => {
+                  const m = drfErrorToMessage(messages, '')
+                  return m ? `${field}: ${m}` : ''
+                })
+                .filter(Boolean)
+              message = errorFields.join('; ')
+            }
           } else if (typeof data.error === 'string') {
             message = data.error
           }
