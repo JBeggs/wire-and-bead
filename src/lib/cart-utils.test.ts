@@ -2,7 +2,7 @@
  * Cart utils unit tests — free-delivery threshold vs retail subtotal (matches cart totals / API).
  */
 import { describe, it, expect } from 'vitest'
-import { groupCartItems, getCartExtraDelivery, isCourierGuyCartItem } from './cart-utils'
+import { groupCartItems, getCartExtraDelivery, getCollectPricingTotal, isCourierGuyCartItem } from './cart-utils'
 import type { CartItem } from './types'
 
 function makeItem(overrides: Partial<CartItem> & { price: number; quantity: number }): CartItem {
@@ -211,5 +211,15 @@ describe('getCartExtraDelivery', () => {
     ]
     const extra = getCartExtraDelivery(items)
     expect(extra).toBe(80)
+  })
+})
+
+describe('getCollectPricingTotal', () => {
+  it('sums subtotal and supplier delivery minus discount', () => {
+    expect(getCollectPricingTotal({ subtotal: 200, supplier_delivery: 50, discount: 10 })).toBe(240)
+  })
+
+  it('never returns negative totals', () => {
+    expect(getCollectPricingTotal({ subtotal: 50, supplier_delivery: 0, discount: 100 })).toBe(0)
   })
 })

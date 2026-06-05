@@ -942,6 +942,11 @@ export const ecommerceApi = {
     /** Customer orders (current user only). Use for profile / non-business flow. */
     myOrders: () => apiClient.get<{ success?: boolean; data?: unknown[] }>('/v1/orders/my-orders/'),
     get: (id: string) => apiClient.get(`/v1/orders/${id}/`),
+    getByNumber: (orderNumber: string, options?: { syncPayment?: boolean }) =>
+      apiClient.get(
+        `/v1/orders/number/${encodeURIComponent(orderNumber)}/`,
+        options?.syncPayment ? { sync_payment: '1' } : undefined,
+      ),
     create: (data: Record<string, unknown>) => apiClient.post('/v1/orders/', data),
     update: (id: string, data: Record<string, unknown>) => apiClient.patch(`/v1/orders/${id}/`, data),
     updateStatus: (id: string, data: { status: string; notes?: string }) =>

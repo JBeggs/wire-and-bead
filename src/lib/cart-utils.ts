@@ -9,6 +9,16 @@ import {
 
 export const COURIER_GUY_SLUGS = new Set(['temu', 'aliexpress', 'ubuy', 'gumtree'])
 export const OTHER_GROUP = '__other__'
+export const CHECKOUT_DELIVERY_PREF_KEY = 'checkoutDeliveryPreferenceV1'
+
+/** Cart total excluding Courier Guy shipping (subtotal + supplier delivery − discount). */
+export function getCollectPricingTotal(cart: Pick<Cart, 'subtotal' | 'supplier_delivery' | 'discount'> | null | undefined): number {
+  if (!cart) return 0
+  const subtotal = Number(cart.subtotal ?? 0)
+  const supplierDelivery = Number(cart.supplier_delivery ?? 0)
+  const discount = Number(cart.discount ?? 0)
+  return Math.max(0, subtotal + supplierDelivery - discount)
+}
 
 function normalizeSupplierSlug(item: CartItem): string {
   return String(item.supplier_slug ?? item.supplierSlug ?? '').trim().toLowerCase()

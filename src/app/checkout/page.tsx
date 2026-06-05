@@ -3,16 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ecommerceApi } from '@/lib/api'
+import { ecommerceApi, getApiErrorMessage } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
-import { Cart, CartItem, SupplierDeliveryBreakdownItem, type GumtreeFulfillmentMethod } from '@/lib/types'
+import { Cart, CartItem, CollectionAddress, SupplierDeliveryBreakdownItem, type GumtreeFulfillmentMethod } from '@/lib/types'
 import { ArrowLeft, CreditCard, Truck, Shield, Lock, MapPin, Package } from 'lucide-react'
-import { getCartItemImages, isCourierGuyCartItem, normalizeCartResponse } from '@/lib/cart-utils'
+import { CHECKOUT_DELIVERY_PREF_KEY, getCartItemImages, isCourierGuyCartItem, normalizeCartResponse } from '@/lib/cart-utils'
 import { getProductCardImages, IMAGE_DIM } from '@/lib/image-utils'
 import { PudoLocationSelector, type PudoLocation } from '@/components/checkout/PudoLocationSelector'
 
-type DeliveryMethod = 'standard' | 'express' | 'pudo'
+type DeliveryMethod = 'standard' | 'express' | 'pudo' | 'collect'
 
 const OTHER_COURIER_SLUGS = new Set(['temu', 'aliexpress', 'ubuy']) // Courier Guy but not Gumtree
 const GUMTREE_DELIVERY_BLOCK_MESSAGE = 'Item cannot be delivered. Please contact support.'
@@ -42,12 +42,15 @@ export default function CheckoutPage() {
   const [gumtreeDeliveryBlocked, setGumtreeDeliveryBlocked] = useState(false)
   const [pudoAvailable, setPudoAvailable] = useState(true)
   const [collectionAddressDisplay, setCollectionAddressDisplay] = useState<string | null>(null)
+  const [collectionAddress, setCollectionAddress] = useState<CollectionAddress | null>(null)
+  const [courierQuoteUnavailable, setCourierQuoteUnavailable] = useState(false)
   const [addressChecked, setAddressChecked] = useState(false)
   const [addressQuoteMessage, setAddressQuoteMessage] = useState('')
   const [dynamicRates, setDynamicRates] = useState<Record<DeliveryMethod, number>>({
     standard: 90,
     express: 130,
     pudo: 40,
+    collect: 0,
   })
   const { user, profile, loading: authLoading } = useAuth()
   const { showError } = useToast()
@@ -77,18 +80,23 @@ export default function CheckoutPage() {
   const courierShipping =
     !hasCourierGuyItems
       ? 0
-      : hasGumtreeItems && !hasOtherCourierItems && gumtreeFulfillmentMethod === 'collect'
+      : deliveryMethod === 'collect'
         ? 0
-        : Number(dynamicRates[deliveryMethod] || 0)
+        : hasGumtreeItems && !hasOtherCourierItems && gumtreeFulfillmentMethod === 'collect'
+          ? 0
+          : Number(dynamicRates[deliveryMethod] || 0)
   const courierShippingForDisplay = hasCourierGuyItems && addressChecked ? courierShipping : 0
   const displayTotal = Number(cart?.subtotal || 0) + supplierDelivery + courierShippingForDisplay
 
   const setDeliveryAndEnsureAllowed = (method: DeliveryMethod) => {
-    if ((method === 'standard' || method === 'express' || method === 'pudo') && !hasCourierGuyItems) return
+    if ((method === 'standard' || method === 'express' || method === 'pudo') && (!hasCourierGuyItems || courierQuoteUnavailable)) return
     if (method === 'pudo' && !pudoAvailable) return
     setDeliveryMethod(method)
     if (method !== 'pudo') setSelectedPudoLocation(null)
   }
+
+  const showCourierDeliveryOptions =
+    hasCourierGuyItems && !courierQuoteUnavailable && (hasOtherCourierItems || gumtreeFulfillmentMethod === 'deliver')
 
   const fetchCart = useCallback(async () => {
     if (!user) return
@@ -142,9 +150,15 @@ export default function CheckoutPage() {
 
       const dm = deliveryMethodRef.current
       if (!hasCg) {
+        if (dm !== 'collect') setDeliveryMethod('standard')
+      } else if (!['standard', 'express', 'pudo', 'collect'].includes(dm)) {
         setDeliveryMethod('standard')
-      } else if (!['standard', 'express', 'pudo'].includes(dm)) {
-        setDeliveryMethod('standard')
+      }
+      if (typeof window !== 'undefined') {
+        const pref = window.sessionStorage.getItem(CHECKOUT_DELIVERY_PREF_KEY)
+        if (pref === 'collect' && hasCg) {
+          setDeliveryMethod('collect')
+        }
       }
 
       if (!cartData || !cartData.items || cartData.items.length === 0) {
@@ -194,7 +208,7 @@ export default function CheckoutPage() {
       payload.pudo_pickup_point = selectedPudoLocation
     }
     if (hasCourierGuyItems) {
-      ;(payload as any).shipping_override = courierShipping
+      ;(payload as any).shipping_override = deliveryMethod === 'collect' ? 0 : courierShipping
     } else {
       ;(payload as any).shipping_override = 0
     }
@@ -314,6 +328,7 @@ export default function CheckoutPage() {
     }
 
     setQuoteLoading(true)
+    setCourierQuoteUnavailable(false)
     setAddressQuoteMessage('Checking address and fetching Courier Guy rates...')
     try {
       const payload: {
@@ -335,6 +350,23 @@ export default function CheckoutPage() {
       const quotePayload = data?.data ?? data
       const collectionDisplay = quotePayload?.collection_address?.display || null
       setCollectionAddressDisplay(collectionDisplay)
+      setCollectionAddress(quotePayload?.collection_address || null)
+      const hasLiveRates = Array.isArray(quotePayload?.rates) && quotePayload.rates.length > 0
+      const quoteUnavailable = quotePayload?.fallback === true && !hasLiveRates
+      setCourierQuoteUnavailable(quoteUnavailable)
+
+      if (quoteUnavailable) {
+        setDeliveryMethod('collect')
+        setGumtreeFulfillmentMethod('collect')
+        setAddressChecked(true)
+        const collectionMsg = collectionDisplay ? ` Collection point: ${collectionDisplay}.` : ''
+        setAddressQuoteMessage(
+          'Courier Guy quote unavailable. Please collect your order from our store — no delivery charge.' + collectionMsg,
+        )
+        return
+      }
+
+      setCourierQuoteUnavailable(false)
       const nextPudoAvailable = quotePayload?.pudo_available !== false
       setPudoAvailable(nextPudoAvailable)
       if (!nextPudoAvailable && deliveryMethod === 'pudo') {
@@ -403,7 +435,8 @@ export default function CheckoutPage() {
       if (deliveryMethod === 'pudo' && selectedPudoLocation) {
         cartUpdatePayload.pudo_pickup_point = selectedPudoLocation
       }
-      ;(cartUpdatePayload as any).shipping_override = hasCourierGuyItems ? (dynamicRates[deliveryMethod] || 0) : 0
+      ;(cartUpdatePayload as any).shipping_override =
+        hasCourierGuyItems && deliveryMethod !== 'collect' ? (dynamicRates[deliveryMethod] || 0) : 0
       await ecommerceApi.cart.updateShipping(cartUpdatePayload)
 
       let shippingAddress: Record<string, string>
@@ -415,6 +448,17 @@ export default function CheckoutPage() {
           city: selectedPudoLocation.city,
           province: selectedPudoLocation.province || '',
           postal_code: selectedPudoLocation.postal_code || selectedPudoLocation.postalCode || '',
+          country: 'ZA',
+        }
+      } else if (deliveryMethod === 'collect' && collectionAddress) {
+        shippingAddress = {
+          businessName: formData.business_name,
+          address: collectionAddress.street_address || collectionAddressDisplay || '',
+          street_address: collectionAddress.street_address || '',
+          suburb: collectionAddress.suburb || '',
+          city: collectionAddress.city || '',
+          province: collectionAddress.province || '',
+          postal_code: collectionAddress.postal_code || '',
           country: 'ZA',
         }
       } else {
@@ -431,11 +475,19 @@ export default function CheckoutPage() {
       }
 
       const primaryDeliveryMethod =
-        hasOtherCourierItems || (hasGumtreeItems && gumtreeFulfillmentMethod === 'deliver')
+        deliveryMethod === 'collect'
+          ? 'collect'
+          : hasOtherCourierItems || (hasGumtreeItems && gumtreeFulfillmentMethod === 'deliver')
+            ? deliveryMethod
+            : hasGumtreeItems && gumtreeFulfillmentMethod === 'collect'
+              ? 'collect'
+              : deliveryMethod
+
+      const courierFulfillmentMethod =
+        deliveryMethod !== 'collect' &&
+        (hasOtherCourierItems || (hasGumtreeItems && gumtreeFulfillmentMethod === 'deliver'))
           ? deliveryMethod
-          : hasGumtreeItems && gumtreeFulfillmentMethod === 'collect'
-            ? 'collect'
-            : deliveryMethod
+          : undefined
 
       const orderPayload: Record<string, unknown> = {
         customer: {
@@ -451,10 +503,7 @@ export default function CheckoutPage() {
         supplier_delivery: supplierDelivery,
         courier_guy_shipping: courierShipping,
         gumtree_fulfillment_method: hasGumtreeItems ? gumtreeFulfillmentMethod : undefined,
-        courier_fulfillment_method:
-          hasOtherCourierItems || (hasGumtreeItems && gumtreeFulfillmentMethod === 'deliver')
-            ? deliveryMethod
-            : undefined,
+        courier_fulfillment_method: courierFulfillmentMethod,
       }
 
       if (deliveryMethod === 'pudo' && selectedPudoLocation) {
@@ -465,31 +514,49 @@ export default function CheckoutPage() {
       const order = orderResponse?.data ?? orderResponse
 
       const orderId = order?.id
+      const orderNumber = order?.order_number || order?.orderNumber
+      const orderTotal = Number(order?.total ?? displayTotal)
       if (!orderId) {
         showError('Invalid order response')
         return
       }
+      if (!Number.isFinite(orderTotal) || orderTotal < 2) {
+        showError('Minimum order total for card payment is R2.00')
+        return
+      }
 
-      const checkoutResponse = await ecommerceApi.payments.createCheckout(orderId) as any
-      const res = checkoutResponse?.data ?? checkoutResponse
-      const redirectUrl = res?.data?.redirectUrl ?? res?.redirectUrl
+      const successQuery = new URLSearchParams()
+      if (orderNumber) successQuery.set('orderId', String(orderNumber))
+      else successQuery.set('orderId', String(orderId))
+      if (orderTotal >= 2000) successQuery.set('highValue', 'true')
+
+      const checkoutResponse = await ecommerceApi.payments.createCheckout(String(orderId), {
+        successUrl: `${window.location.origin}/checkout/success?${successQuery.toString()}`,
+        cancelUrl: `${window.location.origin}/checkout`,
+      }) as { data?: { redirectUrl?: string; data?: { redirectUrl?: string } }; redirectUrl?: string }
+      const checkoutData = checkoutResponse?.data ?? checkoutResponse
+      const redirectUrl = checkoutData?.data?.redirectUrl ?? checkoutData?.redirectUrl
 
       if (redirectUrl) {
         window.location.href = redirectUrl
-      } else {
-        showError('Failed to create payment session')
+        return
       }
-    } catch (error: any) {
-      const errPayload = error?.details?.error
-      const phoneBlocked =
-        errPayload &&
-        typeof errPayload === 'object' &&
-        errPayload.code === 'PHONE_NOT_VERIFIED'
+
+      showError('Failed to create payment session')
+    } catch (error: unknown) {
+      type CheckoutErrorPayload = { code?: string; message?: string }
+      const errPayload: CheckoutErrorPayload | undefined =
+        error &&
+        typeof error === 'object' &&
+        'details' in error
+          ? (error as { details?: { error?: CheckoutErrorPayload } }).details?.error
+          : undefined
+      const phoneBlocked = errPayload?.code === 'PHONE_NOT_VERIFIED'
       const checkoutMsg = phoneBlocked
-        ? typeof errPayload.message === 'string' && errPayload.message.trim()
+        ? typeof errPayload?.message === 'string' && errPayload.message.trim()
           ? errPayload.message
           : 'Please verify your cellphone number on your profile before checkout.'
-        : error.message || 'Failed to process checkout'
+        : getApiErrorMessage(error, 'Failed to process checkout')
       showError(checkoutMsg)
     } finally {
       setProcessing(false)
@@ -694,7 +761,7 @@ export default function CheckoutPage() {
                     Delivery Method
                   </h2>
                   <div className="space-y-3">
-                    {hasGumtreeItems && (
+                    {hasGumtreeItems && !courierQuoteUnavailable && (
                       <div className="mb-4 pb-4 border-b border-gray-200">
                         <p className="text-sm font-medium text-text mb-2">Gumtree items</p>
                         <div className="flex gap-4">
@@ -724,7 +791,7 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                     )}
-                    {hasCourierGuyItems && (hasOtherCourierItems || gumtreeFulfillmentMethod === 'deliver') && (
+                    {showCourierDeliveryOptions && (
                       <>
                   <label className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
                     deliveryMethod === 'standard' ? 'border-vintage-primary bg-vintage-primary/5' : 'border-gray-200 hover:border-vintage-primary/50'
@@ -782,6 +849,29 @@ export default function CheckoutPage() {
                   </label>
                       </>
                     )}
+                    {hasCourierGuyItems && (
+                      <label className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
+                        deliveryMethod === 'collect' ? 'border-vintage-primary bg-vintage-primary/5' : 'border-gray-200 hover:border-vintage-primary/50'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="deliveryMethod"
+                          value="collect"
+                          checked={deliveryMethod === 'collect'}
+                          onChange={() => setDeliveryAndEnsureAllowed('collect')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <span className="font-medium">Collect from store</span>
+                          <span className="ml-2 text-green-700 font-medium">Free</span>
+                          <p className="text-sm text-text-muted mt-0.5">
+                            {courierQuoteUnavailable
+                              ? 'Courier Guy delivery is unavailable — collect your full order from us.'
+                              : 'Collect your order from us — no Courier Guy delivery charge.'}
+                          </p>
+                        </div>
+                      </label>
+                    )}
                 </div>
                 {collectionAddressDisplay && (
                   <p className="mt-4 text-sm text-text-muted">
@@ -797,6 +887,15 @@ export default function CheckoutPage() {
                   <p className={`mt-4 text-sm ${supplierDelivery > 0 ? 'text-text-muted' : 'text-green-700'}`}>
                     {supplierDelivery > 0 ? 'Flat delivery rate applies.' : 'Congrats, delivery is free.'}
                   </p>
+                )}
+
+                {deliveryMethod === 'collect' && (
+                  <div className="mt-6 pt-6 border-t border-gray-200 text-sm">
+                    <p className="font-medium text-text mb-1">Collect from:</p>
+                    <p className="text-text-muted">
+                      {collectionAddressDisplay || 'Our store — we will confirm collection details after your order.'}
+                    </p>
+                  </div>
                 )}
 
                 {deliveryMethod === 'pudo' && (
@@ -910,9 +1009,11 @@ export default function CheckoutPage() {
                       </div>
                     ) : null
                   })()}
-                  {hasGumtreeItems && gumtreeFulfillmentMethod === 'collect' && (
+                  {(deliveryMethod === 'collect' || (hasGumtreeItems && gumtreeFulfillmentMethod === 'collect')) && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-text-muted">Gumtree: Collect in-store</span>
+                      <span className="text-text-muted">
+                        {deliveryMethod === 'collect' ? 'Collect from store' : 'Gumtree: Collect in-store'}
+                      </span>
                       <span className="font-medium text-green-700">Free</span>
                     </div>
                   )}

@@ -7,8 +7,20 @@ import { Cart, CartItem, SupplierDeliveryBreakdownItem } from '@/lib/types'
 import { useToast } from '@/contexts/ToastContext'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Clock, Sparkles, Package, TimerReset, Truck, Shield } from 'lucide-react'
-import { formatCartCountdown, getCartItemImages, getCartItemKey, getItemMinQuantity, getItemStockQuantity, groupCartItems, normalizeCartResponse, OTHER_GROUP } from '@/lib/cart-utils'
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Clock, Sparkles, Package, TimerReset, Truck, Shield, MapPin } from 'lucide-react'
+import {
+  CHECKOUT_DELIVERY_PREF_KEY,
+  formatCartCountdown,
+  getCartItemImages,
+  getCartItemKey,
+  getCollectPricingTotal,
+  getItemMinQuantity,
+  getItemStockQuantity,
+  groupCartItems,
+  isCourierGuyCartItem,
+  normalizeCartResponse,
+  OTHER_GROUP,
+} from '@/lib/cart-utils'
 import { isBundleProduct } from '@/lib/product-utils'
 import { getProductCardImages } from '@/lib/image-utils'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
@@ -126,6 +138,7 @@ export default function CartPage() {
   const [updating, setUpdating] = useState<string | null>(null)
   const [_tick, setTick] = useState(Date.now())
   const [gumtreeDeliveryBlocked, setGumtreeDeliveryBlocked] = useState(false)
+  const [collectPricingActive, setCollectPricingActive] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const { showError, showSuccess } = useToast()
   const { user } = useAuth()
@@ -227,6 +240,26 @@ export default function CartPage() {
   }, [])
 
   const items = useMemo(() => cart?.items ?? EMPTY_CART_ITEMS, [cart?.items])
+  const hasCourierGuyItems = useMemo(() => items.some((item) => isCourierGuyCartItem(item)), [items])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setCollectPricingActive(window.sessionStorage.getItem(CHECKOUT_DELIVERY_PREF_KEY) === 'collect')
+  }, [])
+
+  const handleCollectPricing = () => {
+    setCollectPricingActive(true)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(CHECKOUT_DELIVERY_PREF_KEY, 'collect')
+    }
+  }
+
+  const handleDeliveryPricing = () => {
+    setCollectPricingActive(false)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(CHECKOUT_DELIVERY_PREF_KEY)
+    }
+  }
 
   const removeItem = useCallback(
     async (productId: string, silent = false) => {
@@ -326,6 +359,7 @@ export default function CartPage() {
   const discount = Number(cart?.discount || 0)
   const subtotal = Number(cart?.subtotal || 0)
   const total = Math.max(0, subtotal + supplierDelivery - discount)
+  const collectTotal = getCollectPricingTotal(cart)
 
   if (loading) {
     return (
@@ -566,14 +600,54 @@ export default function CartPage() {
                       </div>
                     ) : null
                   })()}
+                  {hasCourierGuyItems && collectPricingActive && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-muted">Courier Guy delivery</span>
+                      <span className="font-medium text-green-700">Not included (collect)</span>
+                    </div>
+                  )}
                   <div className="my-4 divider" />
                   <div className="flex justify-between text-lg">
-                    <span className="font-semibold">Total</span>
+                    <span className="font-semibold">
+                      {hasCourierGuyItems && collectPricingActive ? 'Collect total' : 'Total'}
+                    </span>
                     <span className="font-bold text-vintage-primary">
-                      R{total.toFixed(2)}
+                      R{(hasCourierGuyItems && collectPricingActive ? collectTotal : total).toFixed(2)}
                     </span>
                   </div>
                 </div>
+
+                {hasCourierGuyItems && (
+                  <div className="mt-4 space-y-2">
+                    <button
+                      type="button"
+                      onClick={handleCollectPricing}
+                      className={`btn w-full py-2.5 text-sm ${collectPricingActive ? 'btn-primary' : 'btn-secondary'}`}
+                      data-cy="cart-collect-pricing"
+                    >
+                      <MapPin className="mr-2 inline h-4 w-4" />
+                      Collect from store (no Courier Guy)
+                    </button>
+                    {collectPricingActive ? (
+                      <p className="rounded-md bg-green-50 px-3 py-2 text-xs text-green-800">
+                        Price above excludes Courier Guy delivery. Select collect at checkout to pay R{collectTotal.toFixed(2)}.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-text-muted">
+                        Courier Guy shipping is calculated at checkout when you enter your address.
+                      </p>
+                    )}
+                    {collectPricingActive && (
+                      <button
+                        type="button"
+                        onClick={handleDeliveryPricing}
+                        className="w-full text-xs text-text-muted underline hover:text-text"
+                      >
+                        Show standard cart total instead
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {user ? (
                   <Link
