@@ -271,14 +271,16 @@ export function getArticleCardImageUrl(
   return ARTICLE_IMAGE_PLACEHOLDER
 }
 
-/** Article detail hero — thumb when API provides it, else full; proxied for cache. */
+/** Article detail hero — full image (not card thumbnail); proxied for cache. */
 export function getArticleHeroImageUrl(
   article?: {
     social_image?: { file_url?: string | null; thumbnail_url?: string | null } | null
     featured_media?: { file_url?: string | null; thumbnail_url?: string | null } | null
   } | null,
 ): string {
-  return getArticleCardImageUrl(article)
+  const raw = pickArticleShareImageRaw(article || undefined)
+  if (raw) return finalizeDisplayUrl(raw)
+  return ARTICLE_IMAGE_PLACEHOLDER
 }
 
 /** Small logo in cards and headers. */

@@ -473,8 +473,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           {products.length > 0 ? (
             <>
               <div className="product-grid" data-cy="products-grid">
-                {products.map((product: Product) => (
-                  <ProductCard key={product.id} product={product} homeQuickView />
+                {products.map((product: Product, index: number) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    homeQuickView
+                    imageLoading={index < 4 ? 'eager' : 'lazy'}
+                  />
                 ))}
               </div>
               <PaginationNav
